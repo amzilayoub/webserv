@@ -12,12 +12,12 @@
 
 # include "./Store.hpp"
 
-webserv::Store::Store()
+webserv::Store::Store() : location_object(nullptr)
 {
 
 }
 
 webserv::Store::~Store()
 {
-
+	
 }

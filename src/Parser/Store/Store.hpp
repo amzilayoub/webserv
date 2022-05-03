@@ -11,6 +11,7 @@
 #  define __STORE__HPP__
 
 #  include <map>
+#  include <list>
 #  include <string>
 
 namespace webserv
@@ -20,8 +21,18 @@ class Store
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		std::string	type;
-		void		*value;
+		std::string							listen;
+		unsigned int						port;
+		std::string							root;
+		std::list<std::string>				allow_methods;
+		std::string							upload_path;
+		std::list<std::string>				index;
+		std::map<int, std::string>			error_page;
+		bool								autoindex;
+		unsigned int						client_max_body_size;
+		std::map<std::string, std::string>	redirection;
+		std::string							location;
+		Store								*location_object;
 
 	/************************ CONSTRUCOTRS ************************/
 	public:

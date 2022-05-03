@@ -13,6 +13,8 @@
 /************************ CONSTRUCOTRS ************************/
 webserv::Lexer::Lexer(CharacterReader &rhs) : _charReader(rhs)
 {
+	_separatore.push_front(__SEMI_COLON__);
+	_separatore.push_front(__COLON__);
 	this->_storeToken();
 }
 
@@ -33,6 +35,20 @@ std::string webserv::Lexer::nextToken()
 bool	webserv::Lexer::_isWhiteSPace(char const &c) const
 {
 	return ((c >= 9 && c <= 13) || c == 32);
+}
+
+bool webserv::Lexer::_isSeparatore(std::string const &str) const
+{
+	if (this->_isWhiteSPace(str[0]))
+		return (true);
+	std::list<std::string>::const_iterator it = this->_separatore.begin();
+
+	for (; it != this->_separatore.end(); it++)
+	{
+		if ((*it) == str)
+			return (true);
+	}
+	return (false);
 }
 
 bool	webserv::Lexer::isEOFToken() const
@@ -60,7 +76,7 @@ void	webserv::Lexer::_storeToken()
 	{
 		token += this->_charReader.next();
 		c = this->_charReader.peek();
-		if (this->_isWhiteSPace(c) || c == __COMMA__)
+		if (this->_isSeparatore(std::string(1, c)) || this->_isSeparatore(token))
 		{
 			this->_last_token = token;
 			return ;

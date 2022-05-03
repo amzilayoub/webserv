@@ -16,20 +16,29 @@
 #  define __LEXER__HPP__
 
 /************************ SOME CONSTANTS ************************/
-#  define __COMMA__ ';'
+#  define __SEMI_COLON__ ";"
+#  define __COLON__ ":"
 
 #  include <string>
+#  include <list>
 #  include "../CharacterReader/CharacterReader.hpp"
 
 namespace webserv
 {
 
+typedef struct	s_token_data
+{
+	std::string	type;
+	std::string	value;
+}				t_token_data;
+
 class Lexer
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	private:
-		CharacterReader &_charReader;
-		std::string		_last_token;
+		CharacterReader 			&_charReader;
+		std::string					_last_token;
+		std::list<std::string>		_separatore;
 	
 	/************************ CONSTRUCOTRS ************************/
 	public:
@@ -76,6 +85,7 @@ class Lexer
 		 */
 		void	_storeToken();
 		bool	_isWhiteSPace(char const &c) const;
+		bool	_isSeparatore(std::string const &str) const;
 };
 
 }
