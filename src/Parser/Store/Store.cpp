@@ -8,16 +8,16 @@
 **/
 
 
-/************************ CONSTRUCOTRS ************************/
 
 # include "./Store.hpp"
 
-webserv::Store::Store() : location_object(nullptr)
+/************************ CONSTRUCOTRS ************************/
+webserv::Store::Store()
 {
 
 }
 
 webserv::Store::~Store()
 {
-	
+
 }

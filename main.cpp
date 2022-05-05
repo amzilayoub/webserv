@@ -1,15 +1,10 @@
-# include "./src/Parser/CharacterReader/CharacterReader.hpp"
-# include "./src/Parser/Lexer/Lexer.hpp"
-# include <map>
+
 # include <iostream>
+# include "./src/Webserv.includes.hpp"
 
 int main()
 {
-	webserv::CharacterReader cr("./src/Config/default.conf");
-	webserv::Lexer lx(cr);
+	webserv::Config config;
 
-	while (!lx.isEOFToken())
-	{
-		std::cout << lx.nextToken() << std::endl;
-	}
+	config.parse("./src/ConfigFiles/default.conf");
 }

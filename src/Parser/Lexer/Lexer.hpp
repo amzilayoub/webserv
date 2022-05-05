@@ -26,12 +26,6 @@
 namespace webserv
 {
 
-typedef struct	s_token_data
-{
-	std::string	type;
-	std::string	value;
-}				t_token_data;
-
 class Lexer
 {
 	/************************ MEMBER ATTRIBUTES ************************/

@@ -16,7 +16,6 @@
 
 namespace webserv
 {
-
 class Store
 {
 	/************************ MEMBER ATTRIBUTES ************************/
@@ -32,16 +31,17 @@ class Store
 		unsigned int						client_max_body_size;
 		std::map<std::string, std::string>	redirection;
 		std::string							location;
-		Store								*location_object;
+		std::list<Store>					location_object;
 
 	/************************ CONSTRUCOTRS ************************/
 	public:
 		Store(void);
 		~Store(void);
 	
-	/************************ CONSTRUCOTRS ************************/
+	/************************ MEMBER FUNCTIONS ************************/
 
 };
 
 }
+
 # endif
