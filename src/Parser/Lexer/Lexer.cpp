@@ -15,6 +15,8 @@ webserv::Lexer::Lexer(CharacterReader &rhs) : _charReader(rhs)
 {
 	_separatore.push_front(__SEMI_COLON__);
 	_separatore.push_front(__COLON__);
+	_separatore.push_front(__RIGHT_BRACKETS__);
+	_separatore.push_front(__LEFT_BRACKETS__);
 	this->_storeToken();
 }
 
@@ -30,6 +32,23 @@ std::string webserv::Lexer::nextToken()
 
 	this->_storeToken();
 	return (token);
+}
+
+std::string webserv::Lexer::join()
+{
+	std::string value;
+
+	value = "";
+	while (!this->isEOFToken())
+	{
+		if (this->peek() == __SEMI_COLON__)
+			return (value);
+		if (value != "")
+			value += " " + this->nextToken();
+		else
+			value = this->nextToken();
+	}
+	return (value);
 }
 
 bool	webserv::Lexer::_isWhiteSPace(char const &c) const

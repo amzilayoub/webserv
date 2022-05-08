@@ -20,9 +20,15 @@ void	webserv::Config::parse(std::string const &path)
 	webserv::Parser				parser(cr);
 
 
-	parser.parse(store);
-	// while (parser.parse())
-	// {
-
-	// }
+	while(parser.parse(store))
+	{
+		this->config.push_back(store);
+		store.clear();
+	}
+	
+	std::list<webserv::Store>::iterator it = this->config.begin();
+	for (; it != this->config.end(); it++)
+	{
+		(*it).print();
+	}
 }

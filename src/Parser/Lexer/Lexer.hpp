@@ -18,6 +18,8 @@
 /************************ SOME CONSTANTS ************************/
 #  define __SEMI_COLON__ ";"
 #  define __COLON__ ":"
+#  define __LEFT_BRACKETS__ "{"
+#  define __RIGHT_BRACKETS__ "}"
 
 #  include <string>
 #  include <list>
@@ -63,6 +65,16 @@ class Lexer
 		 * 
 		 */
 		std::string nextToken();
+		
+		/**
+		 * 
+		 * collect tokens into a single string until reach semi colon ;
+		 * @param None
+		 * 
+		 * @returns std::string (Long token)
+		 * 
+		 */
+		std::string join();
 
 		bool isEOFToken() const;
 	
@@ -80,6 +92,8 @@ class Lexer
 		void	_storeToken();
 		bool	_isWhiteSPace(char const &c) const;
 		bool	_isSeparatore(std::string const &str) const;
+	
+	/************************ MEMBER CLASS ************************/
 };
 
 }

@@ -20,7 +20,7 @@ class Store
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		std::string							listen;
+		std::string							host;
 		unsigned int						port;
 		std::string							root;
 		std::list<std::string>				allow_methods;
@@ -39,7 +39,8 @@ class Store
 		~Store(void);
 	
 	/************************ MEMBER FUNCTIONS ************************/
-
+	void	print() const;
+	void	clear();
 };
 
 }
