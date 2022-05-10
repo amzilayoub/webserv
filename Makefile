@@ -6,7 +6,8 @@ SRC = main.cpp 											\
 	./src/Config/Config.cpp								\
 	./src/Networking/Socket/Socket.cpp					\
 	./src/Networking/Server/Server.cpp					\
+	./src/Networking/Kqueue/Kqueue.cpp					\
 
 
 all:
-	clang++ -std=c++98 $(SRC)
+	clang++ -fsanitize=address -std=c++98 $(SRC)

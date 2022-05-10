@@ -13,7 +13,7 @@
 #  define __MAX_BACKLOG__ 128
 
 #  include "../Socket/Socket.hpp"
-
+#  include "../Kqueue/Kqueue.hpp"
 namespace webserv
 {
 
@@ -22,6 +22,7 @@ class Server
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
 	public:
 		Socket sock;
+		Kqueue kq;
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
 	public:
