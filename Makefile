@@ -5,7 +5,8 @@ SRC = main.cpp 											\
 	./src/Parser/Parser/Parser.cpp						\
 	./src/Config/Config.cpp								\
 	./src/Networking/Socket/Socket.cpp					\
+	./src/Networking/Server/Server.cpp					\
 
 
 all:
-	clang++ -g -std=c++98 $(SRC)
+	clang++ -std=c++98 $(SRC)

@@ -18,6 +18,7 @@
 #  include <unistd.h>
 #  include <cstdlib>
 #  include <iostream>
+#  include <sys/event.h>
 
 namespace webserv
 {
@@ -37,18 +38,22 @@ class Socket
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
 	public:
+		Socket();
 		Socket(int domain, int type, int protocol);
 		~Socket();
 
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
+		void	create_socket(int domain, int type, int protocol);
 		void	bind_socket(int addr, int port);
 		void	listen_socket(int backlog);
 		void	lunch();
-	
-	private:
-		void	_test_error(int fd) const;
+		void	test_error(int fd) const;
 
+	/************************ GETTERS/SETTERS ************************/
+	public:
+		int					&getSocket();
+		struct sockaddr_in 	&getAddress();
 };
 
 };

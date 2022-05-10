@@ -11,5 +11,6 @@
 # define __NETWORKING__INCLUDES__HPP__
 
 # include "./Socket/Socket.hpp"
+# include "./Server/Server.hpp"
 
 # endif

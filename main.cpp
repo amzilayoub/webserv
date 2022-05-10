@@ -5,11 +5,16 @@
 
 int main()
 {
-	webserv::Config config;
-	webserv::Socket sock(AF_INET, SOCK_STREAM, 0);
+	// webserv::Config config;
+	// webserv::Socket sock(AF_INET, SOCK_STREAM, 0);
 	
-	sock.bind_socket(INADDR_ANY, 80);
-	sock.listen_socket(10);
-	sock.lunch();
+	// sock.bind_socket(INADDR_ANY, 80);
+	// sock.listen_socket(10);
+	// sock.lunch();
 	// config.parse("./src/ConfigFiles/default.conf");
+
+	webserv::Server server(INADDR_ANY, 80);
+
+	server.lunch();
+
 }
