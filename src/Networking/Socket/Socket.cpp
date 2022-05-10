@@ -56,30 +56,6 @@ void	webserv::Socket::listen_socket(int backlog)
 	this->test_error(listen(this->_socket, backlog));
 }
 
-// This function to be removed later on
-void	webserv::Socket::lunch()
-{
-	// int		accept_sock;
-	// size_t	address_size;
-	// char buff[1000];
-
-	// while(1)
-	// {
-	// 	address_size = sizeof(this->_address);
-	// 	std::cout << "ACCEPT" << std::endl;
-	// 	accept_sock = accept(
-	// 			this->_socket,
-	// 			(struct sockaddr*)&this->_address,
-	// 			(socklen_t *)&address_size
-	// 			);
-	// 	this->test_error(accept_sock);
-	// 	read(accept_sock, buff, 1000);
-	// 	printf("%s\n", buff);
-	// 	close(accept_sock);
-
-	// }
-}
-
 void	webserv::Socket::test_error(int fd) const
 {
 	if (fd < 0)
