@@ -102,6 +102,7 @@ class Kqueue
 	public:
 		struct kevent	*get_event_list();
 		int				get_fd(int index);
+		int				&get_kq(void);
 		void			set_kqueue(int fd);
 };
 

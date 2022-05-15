@@ -10,6 +10,18 @@
 # include "./Server.hpp"
 # include "../../OutputColors.hpp"
 # include <fcntl.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <fcntl.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/event.h>
+#include <sys/time.h>
+#include <sys/socket.h>
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Server::Server(int addr, int port)
@@ -24,14 +36,80 @@ webserv::Server::~Server() {}
 /************************ MEMBER FUNCTION ************************/
 void	webserv::Server::lunch()
 {
+	enum { PORT = 80, BACKLOG = 16384, EV_LEN = 2048, BUF_LEN = 65535 };
+	static const char* index_html = "HTTP/1.0 200 OK\r\n" \
+									"Content-Length: 86\r\n\r\n" \
+									"<!DOCTYPE html>" \
+									"<html><head>Hello, world!</head><body><h1>cdn-ish...</h1></body></html>";
 
-	// Set the event set and associate it with the socket
-	// and add the events to the kqueue
+	static char buf[BUF_LEN] = { 0, };
+	static struct kevent *ev_list;
+
+	int fd, kqfd, serverfd, clientfd, ev_count, i, flags;
+    struct kevent ev_set;
+    struct sockaddr_in serveraddr, clientaddr;
+    int clientaddr_size;
+	
+	serverfd = this->sock.getSocket();
+
+
 	this->kq.create_event(this->sock.getSocket(), EVFILT_READ);
+	kqfd = this->kq.get_kq();
 
-	while(1)
-		this->_lunch_worker();
+    for (;;) {
+        ev_count = this->kq.get_event();
+		ev_list = this->kq.get_event_list();
+
+        for (i = 0; i < ev_count; i++) {
+            fd = this->kq.get_fd(i);
+
+            if (fd < 0) continue;
+            if (fd == serverfd) {
+				
+				clientaddr_size = sizeof(this->sock.getAddress());
+
+                clientfd = accept(fd, (struct sockaddr*)&this->sock.getAddress(), (socklen_t *)&clientaddr_size);
+                if (clientfd < 0) {
+                    if (errno == EMFILE) {
+                        continue;
+                    }
+                    perror("accept");
+                    close(fd);
+                    return ;
+                }
+				this->kq.create_event(clientfd, EVFILT_READ);
+                if (fcntl(clientfd, F_SETFL, O_NONBLOCK) < 0) {
+                    perror("fcntl");
+                    close(clientfd);
+                    close(fd);
+                }
+				this->kq.create_event(clientfd, EVFILT_WRITE, EV_ADD | EV_ONESHOT);
+            } else if (this->kq.is_read_available(i)) {
+                int len;
+				std::cout << "read" << std::endl;
+                // memset(buf, 0, sizeof(buf));
+                if ((len = recv(fd, buf, sizeof(buf), 0)) != 0) {
+                }
+				close(fd);
+            } else if (this->kq.is_write_available(i)) {
+                int len = 0;
+                if ((len = send(fd, index_html, strlen(index_html), 0)) != 0) {
+                }
+            }
+        }
+    }
 }
+
+// void	webserv::Server::lunch()
+// {
+
+// 	// Set the event set and associate it with the socket
+// 	// and add the events to the kqueue
+// 	this->kq.create_event(this->sock.getSocket(), EVFILT_READ);
+
+// 	while(1)
+// 		this->_lunch_worker();
+// }
 
 void	webserv::Server::_lunch_worker(void)
 {

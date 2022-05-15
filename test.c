@@ -85,6 +85,7 @@ int main(void) {
             } else if (ev_list[i].filter == EVFILT_READ) {
                 int len;
 
+                printf("Hellooooooo FROM RECV\n");
                 memset(buf, 0, sizeof(buf));
                 if ((len = recv(fd, buf, sizeof(buf), 0)) != 0) {
                     if (errno == EAGAIN) {

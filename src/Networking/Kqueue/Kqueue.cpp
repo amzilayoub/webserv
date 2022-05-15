@@ -89,6 +89,11 @@ struct kevent	*webserv::Kqueue::get_event_list()
 	return (this->_ev_list);
 }
 
+int	&webserv::Kqueue::get_kq()
+{
+	return (this->_kq);
+}
+
 int				webserv::Kqueue::get_fd(int index)
 {
 	if (this->_n_ev <= index)
