@@ -7,7 +7,15 @@ SRC = main.cpp 											\
 	./src/Networking/Socket/Socket.cpp					\
 	./src/Networking/Server/Server.cpp					\
 	./src/Networking/Kqueue/Kqueue.cpp					\
+	./src/Networking/Exchange/Header/Header.cpp			\
+	./src/Utils/split.cpp								\
 
 
 all:
 	clang++ -fsanitize=address -std=c++98 $(SRC)
+
+debug:
+	clang++ -g -fsanitize=address -std=c++98 $(SRC)
+
+find:
+	lsof -t -i:80 

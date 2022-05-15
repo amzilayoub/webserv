@@ -13,7 +13,8 @@ int main()
 	// sock.lunch();
 	// config.parse("./src/ConfigFiles/default.conf");
 
-	webserv::Server server(INADDR_ANY, 80);
+	signal(SIGPIPE, SIG_IGN);
+	webserv::Server server(INADDR_ANY, 8080);
 
 	server.lunch();
 

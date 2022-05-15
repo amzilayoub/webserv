@@ -34,8 +34,6 @@ class Kqueue
 		*/
 		struct kevent	_ev_list[__EV_LIST_SIZE__];
 		struct kevent	_ev_set;
-		int				_filter;
-		int				_flags;
 
 		/*
 		** The return value of kqueue, means the number of fd that an event happend on
@@ -51,10 +49,12 @@ class Kqueue
 	public:
 		/**
 		 * Set the kernel event set/list and associate it with the file descriptor
-		 * @param fd file descriptor 
+		 * @param fd file descriptor
+		 * @param filter action/event to monitor
+		 * @param flags flags on the kqueue instance
 		 * @returns void
 		 */
-		void	set_event(int fd);
+		void	set_event(int fd, int filter, int flags  = EV_ADD, void *udata = NULL);
 		
 		/**
 		 * add the events to the kqueue
@@ -71,6 +71,15 @@ class Kqueue
 		 */
 		int		get_event(void);
 
+		/**
+		 * This functions is a combination of set_event and add_event functions
+		 * @param fd file descriptor
+		 * @param filter action/event to monitor
+		 * @param flags flags on the kqueue instance
+		 * @returns void
+		 */
+		void	create_event(int fd, int filter, int flags = EV_ADD, void *udata = NULL);
+
 
 		/**
 		 * get if we finish working on the fd, in other way, the client disconnected
@@ -80,11 +89,12 @@ class Kqueue
 		bool	isEOF(int index);
 		
 		/**
-		 * get if the fd is available for read event
+		 * get if the fd is available for read/write event
 		 * @param index: as we receive a list of events, we need to specify which index(the index of the fd)
 		 * @returns bool, true is available, otherwise false
 		 */
 		bool	is_read_available(int index);
+		bool	is_write_available(int index);
 
 		void	test_error(int fd, const std::string &str);
 	
@@ -92,6 +102,7 @@ class Kqueue
 	public:
 		struct kevent	*get_event_list();
 		int				get_fd(int index);
+		void			set_kqueue(int fd);
 };
 
 }

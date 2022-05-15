@@ -10,28 +10,31 @@
 # ifndef __SERVER__HPP__
 #  define __SERVER__HPP__
 
+# include "../Networking.includes.hpp"
+
 #  define __MAX_BACKLOG__ 128
 
-#  include "../Socket/Socket.hpp"
-#  include "../Kqueue/Kqueue.hpp"
 namespace webserv
 {
 
 class Server
 {
-	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
+	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		Socket sock;
-		Kqueue kq;
+		Socket		sock;
+		Kqueue		kq;
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
 	public:
 		Server(int addr, int port);
 		~Server();
 	
-	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
+	/************************ MEMBER FUNCTIONS ************************/
 	public:
 		void	lunch();
+	
+	private:
+		void	_lunch_worker(void);
 };
 
 }

@@ -8,15 +8,14 @@
 **/
 
 # include "./Kqueue.hpp"
-
+# include "../../OutputColors.hpp"
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Kqueue::Kqueue()
 {
 	this->_kq = kqueue();
+	std::cout << "KQUEUE CREATED" << std::endl;
 	this->test_error(this->_kq, "Creating Kqueue :");
-	this->_filter = EVFILT_READ;
-	this->_flags = EV_ADD | EV_ENABLE;
 	this->_n_ev = 0;
 }
 
@@ -26,9 +25,9 @@ webserv::Kqueue::~Kqueue()
 }
 
 /************************ MEMBER FUNCTIONS ************************/
-void	webserv::Kqueue::set_event(int fd)
+void	webserv::Kqueue::set_event(int fd, int filter, int flags, void *udata)
 {
-	EV_SET(&this->_ev_set, fd, this->_filter, this->_flags, 0, 0, 0);
+	EV_SET(&this->_ev_set, fd, filter, flags, 0, 0, udata);
 }
 
 void	webserv::Kqueue::add_event(void)
@@ -46,6 +45,12 @@ int		webserv::Kqueue::get_event(void)
 	return (this->_n_ev);
 }
 
+void	webserv::Kqueue::create_event(int fd, int filter, int flags, void *udata)
+{
+	this->set_event(fd, filter, flags, udata);
+	this->add_event();
+}
+
 bool	webserv::Kqueue::isEOF(int index)
 {
 	if (this->_n_ev <= index)
@@ -57,16 +62,23 @@ bool	webserv::Kqueue::is_read_available(int index)
 {
 	if (this->_n_ev <= index)
 		this->test_error(-1, "Kqueue/is_read_available function:");
-	return (this->_ev_list[index].filter & EVFILT_READ);
+	return (this->_ev_list[index].filter == EVFILT_READ);
+}
 
+bool	webserv::Kqueue::is_write_available(int index)
+{
+	if (this->_n_ev <= index)
+		this->test_error(-1, "Kqueue/is_write_available function:");
+	return (this->_ev_list[index].filter == EVFILT_WRITE);
 }
 
 void	webserv::Kqueue::test_error(int fd, const std::string &str)
 {
 	if (fd < 0)
 	{
-		std::cerr << str << " ";
+		std::cerr << RED << str << " ";
 		perror("The following error occured: ");
+		std::cerr << RESET;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -82,4 +94,9 @@ int				webserv::Kqueue::get_fd(int index)
 	if (this->_n_ev <= index)
 		this->test_error(-1, "Kqueue/get_ev_list function:");
 	return (this->_ev_list[index].ident);
+}
+
+void	webserv::Kqueue::set_kqueue(int fd)
+{
+	this->_kq = fd;
 }
