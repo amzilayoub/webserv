@@ -47,6 +47,7 @@ class Socket
 		void	create_socket(int domain, int type, int protocol);
 		void	bind_socket(int addr, int port);
 		void	listen_socket(int backlog);
+		int		accept_socket(void);
 		void	test_error(int fd) const;
 
 	/************************ GETTERS/SETTERS ************************/

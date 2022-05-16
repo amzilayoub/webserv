@@ -56,6 +56,17 @@ void	webserv::Socket::listen_socket(int backlog)
 	this->test_error(listen(this->_socket, backlog));
 }
 
+int		webserv::Socket::accept_socket()
+{
+	int	address_size;
+	int client_fd;
+
+	address_size = sizeof(this->_address);
+	client_fd = accept(this->_socket, (sockaddr *)&this->_address, (socklen_t *)&address_size);
+	this->test_error(client_fd);
+	return (client_fd);
+}
+
 void	webserv::Socket::test_error(int fd) const
 {
 	if (fd < 0)
