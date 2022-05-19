@@ -48,7 +48,7 @@ class Socket
 		void	bind_socket(int addr, int port);
 		void	listen_socket(int backlog);
 		int		accept_socket(void);
-		void	test_error(int fd) const;
+		void	test_error(int fd, std::string const &str) const;
 
 	/************************ GETTERS/SETTERS ************************/
 	public:

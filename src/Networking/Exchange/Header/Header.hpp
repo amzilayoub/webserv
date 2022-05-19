@@ -42,10 +42,12 @@ class Header
 		void	_get_headers(std::string &str);
 	
 	/************************ GETTERS AND SETTERS ************************/
-	std::string &get_method() const;
-	std::string &get_path() const;
-	std::string &get_protocol_version() const;
-	std::string &get_body();
+	public:
+		std::string							&get_method() const;
+		std::string							&get_path() const;
+		std::string							&get_protocol_version() const;
+		std::string							&get_body();
+		std::map<std::string, std::string>	&get_headers();
 };
 
 }

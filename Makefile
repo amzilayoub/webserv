@@ -8,7 +8,9 @@ SRC = main.cpp 											\
 	./src/Networking/Server/Server.cpp					\
 	./src/Networking/Kqueue/Kqueue.cpp					\
 	./src/Networking/Exchange/Header/Header.cpp			\
+	./src/Networking/Exchange/Request/Request.cpp		\
 	./src/Utils/split.cpp								\
+	./src/Logger/Logger.cpp								\
 
 
 all:

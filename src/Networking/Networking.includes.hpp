@@ -15,4 +15,6 @@
 # include "./Exchange/Header/Header.hpp"
 # include "./Server/Server.hpp"
 # include "../Utils/Utils.hpp"
+# include "./Exchange/Request/Request.hpp"
+
 # endif

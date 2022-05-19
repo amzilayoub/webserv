@@ -25,7 +25,6 @@ void	webserv::Header::parse(std::string &str)
 
 	this->_raw_string += str;
 
-	// std::cout << this->_raw_string << std::endl;
 	pos = this->_raw_string.find("\r\n\r\n");
 	if (pos == std::string::npos || this->_is_done)
 		return ;
@@ -62,10 +61,6 @@ void	webserv::Header::_get_headers(std::string &str)
 	*/
 	++it;
 
-	std::cout << "this->_method: " << this->_method << std::endl;
-	std::cout << "this->_path: " << this->_path << std::endl;
-	std::cout << "this->_protocol_version: " << this->_protocol_version << std::endl;
-
 	while (it != words->end())
 	{
 		std::string value;
@@ -85,9 +80,6 @@ void	webserv::Header::_get_headers(std::string &str)
 		delete line;
 	}
 	this->_is_done = true;
-	std::map<std::string, std::string>::iterator it1 = this->_headers.begin();
-	for (; it1 != this->_headers.end(); it1++)
-		std::cout << "key = " << it1->first << " ---- value = " << it1->second << std::endl;
 	delete words;
 }
 
@@ -114,4 +106,9 @@ std::string &webserv::Header::get_protocol_version() const
 std::string &webserv::Header::get_body()
 {
 	return (this->_body);
+}
+
+std::map<std::string, std::string>	&webserv::Header::get_headers()
+{
+	return (this->_headers);
 }

@@ -8,6 +8,7 @@
 **/
 
 # include "./Socket.hpp"
+# include "../../Logger/Logger.hpp"
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Socket::Socket(int domain, int type, int protocol) :
@@ -33,7 +34,7 @@ void	webserv::Socket::create_socket(int domain, int type, int protocol)
 	this->_protocol = protocol;
 
 	this->_socket = socket(domain, type, protocol);
-	this->test_error(this->_socket);
+	this->test_error(this->_socket, "create_socket functions");
 }
 
 void	webserv::Socket::bind_socket(int addr, int port)
@@ -47,13 +48,13 @@ void	webserv::Socket::bind_socket(int addr, int port)
 
 	memset(this->_address.sin_zero, 0, sizeof(this->_address.sin_zero));
 	ret = bind(this->_socket, (struct sockaddr *)&this->_address, sizeof(this->_address));
-	this->test_error(ret);
+	this->test_error(ret, "bind_Socket function");
 }
 
 void	webserv::Socket::listen_socket(int backlog)
 {
 	this->_backlog = backlog;
-	this->test_error(listen(this->_socket, backlog));
+	this->test_error(listen(this->_socket, backlog), "listten_socket function");
 }
 
 int		webserv::Socket::accept_socket()
@@ -63,17 +64,14 @@ int		webserv::Socket::accept_socket()
 
 	address_size = sizeof(this->_address);
 	client_fd = accept(this->_socket, (sockaddr *)&this->_address, (socklen_t *)&address_size);
-	this->test_error(client_fd);
+	this->test_error(client_fd, "accept_socket function");
 	return (client_fd);
 }
 
-void	webserv::Socket::test_error(int fd) const
+void	webserv::Socket::test_error(int fd, std::string const &str) const
 {
 	if (fd < 0)
-	{
-		perror("The following error occured: ");
-		exit(EXIT_FAILURE);
-	}
+		webserv::Logger::error(str);
 }
 
 /************************ GETTERS/SETTERS ************************/

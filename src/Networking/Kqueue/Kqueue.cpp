@@ -9,12 +9,12 @@
 
 # include "./Kqueue.hpp"
 # include "../../OutputColors.hpp"
+# include "../../Logger/Logger.hpp"
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Kqueue::Kqueue()
 {
 	this->_kq = kqueue();
-	std::cout << "KQUEUE CREATED" << std::endl;
 	this->test_error(this->_kq, "Creating Kqueue :");
 	this->_n_ev = 0;
 }
@@ -75,12 +75,7 @@ bool	webserv::Kqueue::is_write_available(int index)
 void	webserv::Kqueue::test_error(int fd, const std::string &str)
 {
 	if (fd < 0)
-	{
-		std::cerr << RED << str << " ";
-		perror("The following error occured: ");
-		std::cerr << RESET;
-		exit(EXIT_FAILURE);
-	}
+		webserv::Logger::error(str);
 }
 
 /************************ GETTERS/SETTERS ************************/

@@ -11,6 +11,7 @@
 #  define __SERVER__HPP__
 
 # include "../Networking.includes.hpp"
+# include "../Exchange/Request/Request.hpp"
 
 #  define __MAX_BACKLOG__ 128
 
@@ -34,7 +35,7 @@ class Server
 		void	lunch();
 	
 	private:
-		void	_lunch_worker(void);
+		void	_lunch_worker(webserv::Request &req);
 };
 
 }
