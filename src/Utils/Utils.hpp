@@ -15,7 +15,8 @@
 
 namespace webserv
 {
-	std::list<std::string> *split(std::string const &str, std::string const &delimeter);
+	std::list<std::string>	*split(std::string const &str, std::string const &delimeter);
+	std::string				&str_to_lower(std::string &str);
 }
 
 

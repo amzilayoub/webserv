@@ -1,25 +1,23 @@
 /***********************************************************************
-* FILENAME :        Request.hpp
+* FILENAME :        Response.hpp
 *
 * DESCRIPTION :
-*       Request class to handle the client request
+*       Response class to handle the client Response
 *
 **/
 
 
-# ifndef __REQUEST__HPP__
-#  define __REQUEST__HPP__
+# ifndef __RESPONSE__HPP__
+#  define __RESPONSE__HPP__
 
 #  include <map>
 #  include <string>
 #  include "../Header/Header.hpp"
-#  define __REGEX_ALPHA_NUM__ "^[a-zA-Z0-9_]*$"
-#  include "../../../Config/Store/Store.hpp"
 
 namespace webserv
 {
 
-class Request
+class Response
 {
 	/************************ MEMBER TYPE ************************/
 	public:
@@ -27,31 +25,28 @@ class Request
 
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		webserv::Store	config;
+		std::map<int, std::string> status_code_list;
 
 	private:
 		webserv::Header _header;
 		std::string		_body;
-		bool			_headers_done;
-		bool			_has_error;
-		std::string		_header_special_char;
-		
+		std::string		_status_code;
+		std::string		_status_string;
+		std::string		_response;
+	
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
 	public:
-		Request();
+		Response();
 	
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
-		void parse(std::string &str);
-		void clear(void);
-		void set_config(webserv::Store config);
+		void		error(int status_code);
+		std::string	&serialize(void);
 
 	/************************ GETTERS/SETTERS ************************/
 	std::map<std::string, std::string>	&get_headers(void);
-	std::string							&get_body();
-	bool								header_is_done();
-	webserv::Header						&get_header_obj(void);
+	std::string &get_body();
 };
 
 };

@@ -5,22 +5,13 @@
 
 int main()
 {
-	// webserv::Config config;
-	// webserv::Socket sock(AF_INET, SOCK_STREAM, 0);
-	
-	// sock.bind_socket(INADDR_ANY, 80);
-	// sock.listen_socket(10);
-	// sock.lunch();
-	// config.parse("./src/ConfigFiles/default.conf");
-
-
+	webserv::Config config;
 
 	signal(SIGPIPE, SIG_IGN);
-	webserv::Server server(INADDR_ANY, 8080);
+	config.parse("./src/ConfigFiles/default.conf");
+
+
+	webserv::Server server(config);
 
 	server.lunch();
-
-	// webserv::Logger::info("test");
-	// webserv::Logger::warning("test");
-
 }

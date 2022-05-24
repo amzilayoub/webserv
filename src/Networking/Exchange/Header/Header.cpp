@@ -45,12 +45,12 @@ void	webserv::Header::_get_headers(std::string &str)
 	std::list<std::string>::iterator	tmp_it;
 	int i;
 
-	words = webserv::split(str, "\n");
+	words = webserv::split(str, "\r\n");
 	line = webserv::split(words->front(), " ");
 	it = line->begin();
-	this->_method = (*it);
-	this->_path = *(++it);
-	this->_protocol_version = *(++it);
+	this->method = (*it);
+	this->path = *(++it);
+	this->protocol_version = *(++it);
 	
 	delete line;
 
@@ -75,7 +75,7 @@ void	webserv::Header::_get_headers(std::string &str)
 		for (; tmp_it != line->end(); tmp_it++)
 			value += (*tmp_it) + ":";
 		value.pop_back();
-		this->_headers[line->front()] = value.substr(1);
+		this->_headers[webserv::str_to_lower(line->front())] = value.substr(1);
 		++it;
 		delete line;
 	}
@@ -83,24 +83,33 @@ void	webserv::Header::_get_headers(std::string &str)
 	delete words;
 }
 
+std::string	webserv::Header::serialize()
+{
+	std::map<std::string, std::string>::iterator	it;
+	std::string										raw;
+
+	it = this->_headers.begin();
+	for (; it != this->_headers.end(); it++)
+		raw += it->first + ": " + it->second + "\r\n";
+	raw += "\r\n";
+
+	return (raw);
+}
+
+void	webserv::Header::clear()
+{
+	this->method.clear();
+	this->path.clear();
+	this->protocol_version.clear();
+	this->_headers.clear();
+	this->_body.clear();
+
+	this->_is_done = false;
+}
+
 bool	webserv::Header::is_done() const
 {
 	return (this->_is_done);
-}
-
-std::string &webserv::Header::get_method() const
-{
-	return (const_cast<std::string&>(this->_method));
-}
-
-std::string &webserv::Header::get_path() const
-{
-	return (const_cast<std::string&>(this->_path));
-}
-
-std::string &webserv::Header::get_protocol_version() const
-{
-	return (const_cast<std::string&>(this->_protocol_version));
 }
 
 std::string &webserv::Header::get_body()

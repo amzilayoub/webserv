@@ -9,6 +9,7 @@
 
 # include "./Socket.hpp"
 # include "../../Logger/Logger.hpp"
+# include <arpa/inet.h>
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Socket::Socket(int domain, int type, int protocol) :

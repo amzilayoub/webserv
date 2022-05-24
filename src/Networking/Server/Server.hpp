@@ -10,8 +10,11 @@
 # ifndef __SERVER__HPP__
 #  define __SERVER__HPP__
 
-# include "../Networking.includes.hpp"
-# include "../Exchange/Request/Request.hpp"
+#  include "../Networking.includes.hpp"
+#  include "../Exchange/Request/Request.hpp"
+#  include "../Client/Client.hpp"
+#  include <map>
+#  include "../../Config/Config.hpp"
 
 #  define __MAX_BACKLOG__ 128
 
@@ -22,12 +25,15 @@ class Server
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		Socket		sock;
-		Kqueue		kq;
+		Socket							sock;
+		Kqueue							kq;
+		std::map<int, webserv::Client>	clients;
+		webserv::Config					&config;
+
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
 	public:
-		Server(int addr, int port);
+		Server(webserv::Config &config);
 		~Server();
 	
 	/************************ MEMBER FUNCTIONS ************************/

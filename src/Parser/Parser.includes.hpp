@@ -10,7 +10,7 @@
 
 # define __PARSER__INCLUDES__HPP__
 
-#  include "./Store/Store.hpp"
+#  include "../Config/Store/Store.hpp"
 #  include "./CharacterReader/CharacterReader.hpp"
 #  include "./Lexer/Lexer.hpp"
 #  include "./Parser/Parser.hpp"

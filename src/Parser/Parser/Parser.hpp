@@ -17,8 +17,8 @@
 #  define __ANY__ ""
 #  define __REGEX_ALPHA_NUM__ "^[a-zA-Z0-9_]*$"
 #  define __REGEX__STRING__ "[a-zA-Z]+"
-#  define __REGEX_IP__ "(\\d{1,3}(\\.\\d{1,3}){3})"
 #  define __REGEX_INTEGER__ "[0-9]+"
+#  define __REGEX_IP__ "(\\d{1,3}(\\.\\d{1,3}){3})"
 #  define __REGEX_URI__ "^/|(/[\\w-]+)+$"
 
 #  include <map>

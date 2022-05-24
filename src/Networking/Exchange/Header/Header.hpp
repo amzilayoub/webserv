@@ -20,14 +20,16 @@ namespace webserv
 class Header
 {
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
+	public:
+		std::string							method;
+		std::string							path;
+		std::string							protocol_version;
+
 	private:
-		std::string							_method;
-		std::string							_path;
-		std::string							_protocol_version;
-		std::map<std::string, std::string>	_headers;
 		bool								_is_done;
-		std::string							_body;
 		std::string							_raw_string;
+		std::map<std::string, std::string>	_headers;
+		std::string							_body;
 
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
 	public:
@@ -35,17 +37,16 @@ class Header
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
 	public:
-		void	parse(std::string &str);
-		bool	is_done() const;
+		void		parse(std::string &str);
+		bool		is_done() const;
+		std::string	serialize();
+		void		clear();
 	
 	private:
 		void	_get_headers(std::string &str);
 	
 	/************************ GETTERS AND SETTERS ************************/
 	public:
-		std::string							&get_method() const;
-		std::string							&get_path() const;
-		std::string							&get_protocol_version() const;
 		std::string							&get_body();
 		std::map<std::string, std::string>	&get_headers();
 };

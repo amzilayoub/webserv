@@ -26,9 +26,9 @@ void	webserv::Config::parse(std::string const &path)
 		store.clear();
 	}
 	
-	std::list<webserv::Store>::iterator it = this->config.begin();
-	for (; it != this->config.end(); it++)
-	{
-		(*it).print();
-	}
+	// std::list<webserv::Store>::iterator it = this->config.begin();
+	// for (; it != this->config.end(); it++)
+	// {
+	// 	(*it).print();
+	// }
 }
