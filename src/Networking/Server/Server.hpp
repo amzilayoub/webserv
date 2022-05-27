@@ -25,10 +25,10 @@ class Server
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		Socket							sock;
-		Kqueue							kq;
-		std::map<int, webserv::Client>	clients;
-		webserv::Config					&config;
+		Socket								sock;
+		Kqueue								kq;
+		std::map<int, webserv::Client>		clients;
+		webserv::Config						&config;
 
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/

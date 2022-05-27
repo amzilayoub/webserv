@@ -9,6 +9,7 @@
 
 # include "./Parser.hpp"
 # include <iostream>
+# include "../../Utils/Utils.hpp"
 
 /************************ CONSTRUCOTRS ************************/
 webserv::Parser::Parser(webserv::CharacterReader &cr)
@@ -161,7 +162,7 @@ bool webserv::Parser::_allow_methods_token(webserv::Store &store)
 		if (value == __SEMI_COLON__)
 			return (true);
 		else if (this->_exec_regex(value, __REGEX__STRING__))
-			store.allow_methods.push_back(value);
+			store.allow_methods.push_back(webserv::str_to_lower(value));
 		else
 			return (false);
 	}

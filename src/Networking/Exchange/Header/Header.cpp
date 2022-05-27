@@ -14,7 +14,7 @@
 # include <list>
 # include "../../../Utils/Utils.hpp"
 
-webserv::Header::Header(void) : _is_done(false)
+webserv::Header::Header(void) : _is_done(false), _raw_header_len(0)
 {
 }
 
@@ -30,6 +30,7 @@ void	webserv::Header::parse(std::string &str)
 		return ;
 
 	headers = this->_raw_string.substr(0, pos);
+	this->_raw_header_len = headers.length();
 	this->_body = this->_raw_string.substr(pos + 4);
 	this->_get_headers(headers);
 	this->_raw_string.clear();
@@ -48,7 +49,7 @@ void	webserv::Header::_get_headers(std::string &str)
 	words = webserv::split(str, "\r\n");
 	line = webserv::split(words->front(), " ");
 	it = line->begin();
-	this->method = (*it);
+	this->method = webserv::str_to_lower((*it));
 	this->path = *(++it);
 	this->protocol_version = *(++it);
 	
@@ -100,11 +101,18 @@ void	webserv::Header::clear()
 {
 	this->method.clear();
 	this->path.clear();
-	this->protocol_version.clear();
 	this->_headers.clear();
 	this->_body.clear();
 
 	this->_is_done = false;
+}
+
+void	webserv::Header::print()
+{
+	std::map<std::string, std::string>::iterator it = this->_headers.begin();
+
+	for (; it != this->_headers.end(); it++)
+		std::cout << it->first << " => " << it->second << std::endl;
 }
 
 bool	webserv::Header::is_done() const
@@ -120,4 +128,8 @@ std::string &webserv::Header::get_body()
 std::map<std::string, std::string>	&webserv::Header::get_headers()
 {
 	return (this->_headers);
+}
+size_t								&webserv::Header::get_raw_header_len() const
+{
+	return (const_cast<size_t&>(this->_raw_header_len));
 }

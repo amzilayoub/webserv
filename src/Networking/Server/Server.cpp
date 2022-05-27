@@ -22,6 +22,7 @@
 # include <sys/time.h>
 # include <sys/socket.h>
 # include "../../Logger/Logger.hpp"
+# include <fstream>
 
 /************************ CONSTRUCTORS/DESTRUCTOR ************************/
 webserv::Server::Server(webserv::Config &config) : config(config)
@@ -58,17 +59,28 @@ void	webserv::Server::_lunch_worker(webserv::Request &req)
 			webserv::Logger::info("New connection arrived");
 			this->kq.test_error(clientfd, "Lunch worker");
 			this->kq.create_event(clientfd, EVFILT_READ);
-			if (fcntl(clientfd, F_SETFL, O_NONBLOCK) < 0) {
+			if (fcntl(clientfd, F_SETFL, O_NONBLOCK) < 0)
+			{
 				perror("fcntl");
 				close(clientfd);
 				close(fd);
 			}
 			this->clients[clientfd].set_fd(clientfd);
 			this->clients[clientfd].req.set_config(this->config.config.front());
-		} else if (this->kq.is_read_available(i)) {
-			this->clients[fd].handle_request();
-			this->kq.create_event(fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT);
-		} else if (this->kq.is_write_available(i)) {
+			this->clients[clientfd].set_config(this->config);
+		} else if (this->kq.is_read_available(i))
+		{
+			int ret;
+
+			webserv::Logger::info("Request delivered !");
+			ret = this->clients[fd].handle_request();
+			std::cout << "RET = " << ret << std::endl;
+			if (ret == __REQUEST_ERROR__ || ret == __REQUEST_DONE__)
+				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT);
+		}
+		else if (this->kq.is_write_available(i))
+		{
+			webserv::Logger::info("Sending response !");
 			this->clients[fd].handle_response();
 			close(fd);
 		}

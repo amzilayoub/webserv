@@ -28,6 +28,7 @@ class Request
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
 		webserv::Store	config;
+		size_t			content_length;
 
 	private:
 		webserv::Header _header;
@@ -35,6 +36,8 @@ class Request
 		bool			_headers_done;
 		bool			_has_error;
 		std::string		_header_special_char;
+		size_t			_body_length;
+		
 		
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
@@ -43,15 +46,17 @@ class Request
 	
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
-		void parse(std::string &str);
+		bool parse(std::string &str, int len);
 		void clear(void);
-		void set_config(webserv::Store config);
+		bool is_done(void);
 
 	/************************ GETTERS/SETTERS ************************/
+	void								set_config(webserv::Store config);
 	std::map<std::string, std::string>	&get_headers(void);
 	std::string							&get_body();
 	bool								header_is_done();
 	webserv::Header						&get_header_obj(void);
+	void								add_body_length(int size);
 };
 
 };

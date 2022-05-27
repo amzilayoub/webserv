@@ -30,6 +30,7 @@ class Header
 		std::string							_raw_string;
 		std::map<std::string, std::string>	_headers;
 		std::string							_body;
+		size_t								_raw_header_len;
 
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
 	public:
@@ -41,6 +42,7 @@ class Header
 		bool		is_done() const;
 		std::string	serialize();
 		void		clear();
+		void		print();
 	
 	private:
 		void	_get_headers(std::string &str);
@@ -49,6 +51,7 @@ class Header
 	public:
 		std::string							&get_body();
 		std::map<std::string, std::string>	&get_headers();
+		size_t								&get_raw_header_len() const;
 };
 
 }

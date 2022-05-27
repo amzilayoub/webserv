@@ -13,6 +13,7 @@
 #  include <string>
 #  include <list>
 #  include <iostream>
+#  include <map>
 
 namespace webserv
 {
@@ -22,6 +23,7 @@ class	Config
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
 		std::list<Store> config;
+		std::map<std::string, std::string> mime_types;
 
 	/************************ CONSTRUCOTRS ************************/
 	public:
@@ -29,7 +31,9 @@ class	Config
 
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
-		void	parse(std::string const &path);
+		void		parse(std::string const &path);
+		void		get_mime_types_list(void);
+		std::string	get_file_extension(std::string &content_type);
 };
 
 }

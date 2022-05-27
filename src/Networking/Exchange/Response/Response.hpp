@@ -26,6 +26,7 @@ class Response
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
 		std::map<int, std::string> status_code_list;
+		std::map<int, std::string> error_pages;
 
 	private:
 		webserv::Header _header;
@@ -42,6 +43,9 @@ class Response
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
 		void		error(int status_code);
+		void		set_header(std::string key, std::string value);
+		void		set_status(int status_code);
+		void		clear();
 		std::string	&serialize(void);
 
 	/************************ GETTERS/SETTERS ************************/
