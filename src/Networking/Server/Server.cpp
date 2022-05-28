@@ -47,8 +47,9 @@ void	webserv::Server::lunch()
 
 void	webserv::Server::_lunch_worker(webserv::Request &req)
 {
-	int ev_count = this->kq.get_event();
+	int ev_count;
 
+	ev_count = this->kq.get_event();
 	for (int i = 0; i < ev_count; i++) {
 		int fd = this->kq.get_fd(i);
 
@@ -74,15 +75,17 @@ void	webserv::Server::_lunch_worker(webserv::Request &req)
 
 			webserv::Logger::info("Request delivered !");
 			ret = this->clients[fd].handle_request();
-			std::cout << "RET = " << ret << std::endl;
+			// std::cout << "RET = " << ret << std::endl;
 			if (ret == __REQUEST_ERROR__ || ret == __REQUEST_DONE__)
-				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD | EV_ONESHOT);
+			{
+				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD);
+				this->kq.create_event(fd, EVFILT_READ, EV_DELETE);
+			}
 		}
 		else if (this->kq.is_write_available(i))
 		{
 			webserv::Logger::info("Sending response !");
 			this->clients[fd].handle_response();
-			close(fd);
 		}
 	}
 }

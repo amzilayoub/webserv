@@ -13,7 +13,9 @@
 #  include <map>
 #  include <string>
 #  include "../Header/Header.hpp"
+#  include <fstream>
 
+#  define __CHUNK_TO_READ__ 1024
 namespace webserv
 {
 
@@ -34,6 +36,11 @@ class Response
 		std::string		_status_code;
 		std::string		_status_string;
 		std::string		_response;
+		bool			_has_error;
+		std::ifstream	_file;
+		std::string		_content_type;
+		bool			_start_chunked;
+		bool			_is_done;
 	
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
@@ -46,11 +53,16 @@ class Response
 		void		set_header(std::string key, std::string value);
 		void		set_status(int status_code);
 		void		clear();
-		std::string	&serialize(void);
+		void		set_file(std::string path, std::string content_type);
+		std::string	serialize(void);
+		std::string	to_hexa(int number);
+		bool		is_done(void);
 
 	/************************ GETTERS/SETTERS ************************/
 	std::map<std::string, std::string>	&get_headers(void);
 	std::string &get_body();
+	bool		has_error(void);
+	bool		isEOF(void);
 };
 
 };

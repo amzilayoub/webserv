@@ -52,13 +52,14 @@ void webserv::Request::clear()
 	this->_headers_done = false;
 	this->_has_error = false;
 	this->_request_length = 0;
+	this->content_length = 0;
 }
 
 bool	webserv::Request::is_done(void)
 {
-	std::cout << "BODY LENGTH = " << this->_request_length << std::endl;
-	std::cout << "content_length = " << this->content_length << std::endl;
-	std::cout << "this->get_header_obj().method = " << this->_header.method << std::endl;
+	// std::cout << "BODY LENGTH = " << this->_request_length << std::endl;
+	// std::cout << "content_length = " << this->content_length << std::endl;
+	// std::cout << "this->get_header_obj().method = " << this->_header.method << std::endl;
 	/*
 	**the -4 is for \r\n\r\n
 	*/

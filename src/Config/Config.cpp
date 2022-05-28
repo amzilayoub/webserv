@@ -51,6 +51,8 @@ void	webserv::Config::get_mime_types_list()
 		this->mime_types[words->back()] = words->front();
 		delete words;
 	}
+	this->mime_types["default_type"] = "text/plain";
+	this->mime_types["default_extension"] = ".txt";
 }
 
 std::string	webserv::Config::get_file_extension(std::string &content_type)

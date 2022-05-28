@@ -17,5 +17,7 @@
 #  define UNSUPPORTED_MEDIA_TYPE 415
 #  define SEE_OTHER 303
 #  define INTERNAL_SERVER_ERROR 500
+#  define MULTIPLE_CHOICES 300
+#  define OK 200
 
 # endif

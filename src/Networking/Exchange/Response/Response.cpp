@@ -9,6 +9,9 @@
 
 # include "./Response.hpp"
 # include "../HttpStatusCode.hpp"
+# include <iostream>
+# include <sstream>
+
 // # include <stdlib.h>
 /************************ MEMBER ATTRIBUTES ************************/
 webserv::Response::Response()
@@ -23,6 +26,8 @@ webserv::Response::Response()
 	this->status_code_list[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
 	this->status_code_list[SEE_OTHER] = "See Other";
 	this->status_code_list[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+	this->status_code_list[MULTIPLE_CHOICES] = "Multiple Choices";
+	this->status_code_list[OK] = "OK";
 
 	this->error_pages[BAD_REQUEST] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Bad Request");
 	this->error_pages[METHOD_NOT_ALLOWED] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Method Not Allowed");
@@ -32,7 +37,12 @@ webserv::Response::Response()
 	this->error_pages[UNSUPPORTED_MEDIA_TYPE] = std::to_string(UNSUPPORTED_MEDIA_TYPE) + std::string(" Unsupported Media Type");
 	this->error_pages[SEE_OTHER] = std::to_string(SEE_OTHER) + std::string(" See Other");
 	this->error_pages[INTERNAL_SERVER_ERROR] = std::to_string(INTERNAL_SERVER_ERROR) + std::string(" Internal Server Error");
+	this->error_pages[MULTIPLE_CHOICES] = std::to_string(MULTIPLE_CHOICES) + std::string(" Multiple Choices");
+	this->error_pages[OK] = std::to_string(OK) + std::string(" OK");
 	this->_status_code = -1;
+	this->_has_error = false;
+	this->_start_chunked = false;
+	this->_is_done = true;
 }
 
 /************************ MEMBER FUNCTIONS ************************/
@@ -41,17 +51,48 @@ void	webserv::Response::error(int status_code)
 	this->set_status(status_code);
 	this->get_headers()["Content-Length"] = std::to_string(this->error_pages[status_code].length());
 	this->_body = this->error_pages[status_code];
+	this->_has_error = true;
 }
 
-std::string	&webserv::Response::serialize(void)
+std::string	webserv::Response::serialize(void)
 {
 	this->_response = this->_header.protocol_version + " ";
 	this->_response += this->_status_code + " ";
 	this->_response += this->_status_string + "\r\n";
 
-	this->_response += this->_header.serialize();
-	this->_response += this->_body + "\r\n";
+	if (this->_has_error)
+	{
+		this->_response += this->_header.serialize();
+		this->_response += this->_body;
+	}
+	else if (this->_start_chunked)
+	{
+		
+		char buf[__CHUNK_TO_READ__ + 1];
 
+		this->_response.clear();
+		this->_file.read(buf ,__CHUNK_TO_READ__);
+
+		buf[this->_file.gcount()] = 0;
+		this->_response = this->to_hexa(this->_file.gcount()) + "\r\n";
+		this->_response += std::string(buf, 0, this->_file.gcount());
+		this->_response += std::string("\r\n", 0, 2);
+
+		if (this->_file.gcount() == 0)
+		{
+			this->_is_done = true;
+			this->_start_chunked = false;
+		}
+	}
+	else
+	{
+		this->set_header("Content-Type", this->_content_type);
+		this->set_header("Transfer-Encoding", "chunked");
+		this->_response += this->_header.serialize();
+		this->_start_chunked = true;
+		this->_is_done = false;
+	}
+	std::cout << this->_response << std::endl;
 	return (this->_response);
 }
 
@@ -62,6 +103,40 @@ void webserv::Response::clear()
 	this->_status_code.clear();
 	this->_status_string.clear();
 	this->_response.clear();
+	this->_has_error = false;
+	this->_file.close();
+	this->_start_chunked = false;
+	this->_is_done = true;
+}
+
+void		webserv::Response::set_file(std::string path, std::string content_type)
+{
+	this->_file.open(path.c_str(), std::ios::binary);
+
+	if (!this->_file.is_open())
+	{
+		this->error(INTERNAL_SERVER_ERROR);
+		return ;
+	}
+	this->_content_type = content_type;
+}
+
+std::string	webserv::Response::to_hexa(int number)
+{
+	std::stringstream stream;
+
+	stream << std::hex << number;
+	return (std::string(stream.str()));
+}
+
+bool	webserv::Response::isEOF(void)
+{
+	return (this->_file.peek() == EOF);
+}
+
+bool	webserv::Response::is_done(void)
+{
+	return (this->_is_done);
 }
 
 /************************ GETTERS/SETTERS ************************/
@@ -84,4 +159,9 @@ void	webserv::Response::set_status(int status_code)
 {
 	this->_status_code = std::to_string(status_code);
 	this->_status_string = this->status_code_list[status_code];
+}
+
+bool	webserv::Response::has_error(void)
+{
+	return (this->_has_error);
 }

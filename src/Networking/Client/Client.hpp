@@ -16,7 +16,8 @@
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
 #  define __REQUEST_ERROR__ 2
-
+#  define __MB_IN_BYTE__ 1048576
+#  include <sys/stat.h>
 namespace webserv
 {
 
@@ -29,6 +30,7 @@ class Client
 		int						_offset;
 		int						_content_length;
 		std::list<std::string>	_methods;
+		std::string				_full_path;
 
 	public:
 		webserv::Request	req;
@@ -43,13 +45,19 @@ class Client
 
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
-		int		handle_request(void);
-		void	handle_response(void);
+		int			handle_request(void);
+		bool		handle_response(void);
+		std::string	get_file_type(std::string path);
 	
 	private:
 		void		_fill_methods(void);
 		std::string	_get_file_name(void);
 		bool		_save_file(void);
+		bool		_file_exists(char const *str);
+		int			_handle_folder(void);
+		std::string	_get_dir_html_tree();
+		int			_post(void);
+		int			_get(void);
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
 	public:
@@ -60,8 +68,9 @@ class Client
 
 	/************************ GETTERS/SETTERS ************************/
 	public:
-		void	set_fd(int fd);
-		void	set_config(webserv::Config &config);
+		void			set_fd(int fd);
+		void			set_config(webserv::Config &config);
+		std::string		&get_full_path(void);
 };
 
 }

@@ -14,6 +14,8 @@
 # include "../Exchange/HttpStatusCode.hpp"
 # include <algorithm>
 # include <fstream>
+# include "../../Logger/Logger.hpp"
+# include "../../Utils/Utils.hpp"
 
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
@@ -43,6 +45,7 @@ int	webserv::Client::handle_request()
 	{
 		std::string buffer(buf, len);
 		
+		// std::cout << "REQ =" << std::string(buf, 0, len) << std::endl;
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -57,7 +60,8 @@ int	webserv::Client::handle_request()
 	// std::cout << buf << std::endl;
 	if (this->req.is_done())
 	{
-		std::cout << "REQ DONE" << std::endl;
+		// std::cout << "REQ DONE" << std::endl;
+		this->_full_path = this->get_full_path();
 		if (this->req.get_headers().find("content-length") != this->req.get_headers().end())
 			this->_content_length = std::stoi(this->req.get_headers()["content-length"]);
 		if (!this->check_allowed_methods())
@@ -65,22 +69,80 @@ int	webserv::Client::handle_request()
 		if (!this->check_resources_exists())
 			return (__REQUEST_ERROR__);
 		if (this->req.get_header_obj().method == "post")
+			return (this->_post());
+		else if (this->req.get_header_obj().method == "get")
+			return (this->_get());
+	}
+	return (__REQUEST_IN_PROGRESS__);
+}
+
+int		webserv::Client::_post()
+{
+	webserv::Logger::info(std::string("POST: ") + this->req.get_header_obj().path);
+
+	if (!this->check_entity_length())
+		return (__REQUEST_ERROR__);
+	if (!this->check_supported_media_type())
+		return (__REQUEST_ERROR__);
+	if (this->req.content_length > 0)
+		this->_save_file();
+	this->res.set_header("Location", this->req.get_header_obj().path);
+	this->res.set_status(SEE_OTHER);
+	return (__REQUEST_DONE__);
+}
+
+int		webserv::Client::_get()
+{
+	struct stat s;
+
+	webserv::Logger::info(std::string("GET: ") + this->req.get_header_obj().path);
+
+	if (lstat(this->_full_path.c_str(), &s) == 0)
+	{
+		/*
+		** if directory
+		*/
+		if (S_ISDIR(s.st_mode))
 		{
-			if (!this->check_entity_length())
-				return (__REQUEST_ERROR__);
-			if (!this->check_supported_media_type())
-				return (__REQUEST_ERROR__);
-			this->_save_file();
-			this->res.set_header("Location", this->req.get_header_obj().path);
-			this->res.set_status(SEE_OTHER);
+			return (this->_handle_folder());
+		}
+		/*
+		** if file
+		*/
+		if (S_ISREG(s.st_mode))
+		{
+			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
+			this->res.set_status(OK);
 			return (__REQUEST_DONE__);
 		}
-		else if (this->req.get_header_obj().method == "get")
+	} else
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	// if (this->req.config.autoindex)
+
+	return (__REQUEST_DONE__);
+}
+
+int		webserv::Client::_handle_folder(void)
+{
+	std::string path = this->_full_path;
+	std::list<std::string>::iterator it = this->req.config.index.begin();
+
+	if (path.back() != '/')
+		path.pop_back();
+	for (; it != this->req.config.index.end(); it++)
+	{
+		std::string filepath = path + (*it);
+		if (this->_file_exists(filepath.c_str()))
 		{
+			this->res.set_file(filepath, this->get_file_type(filepath));
+			this->res.set_status(OK);
 			return (__REQUEST_DONE__);
 		}
 	}
-	return (__REQUEST_IN_PROGRESS__);
+	return (__REQUEST_DONE__);
 }
 
 bool	webserv::Client::_save_file()
@@ -107,21 +169,31 @@ bool	webserv::Client::_save_file()
 return true;
 }
 
-void	webserv::Client::handle_response()
+bool	webserv::Client::handle_response()
 {
 	int len = 0;
+	std::string buf;
 	static const char* index_html = "HTTP/1.0 405 OK\r\n" \
 								"Content-Length: 22\r\n\r\n" \
 								"405 Method not allowed\r\n";
 
 	
-	std::cout << "RESPONSE = " << this->res.serialize() << std::endl;
-	if ((len = send(this->_fd, this->res.serialize().c_str(), this->res.serialize().length(), 0)) != 0) {
+	buf = this->res.serialize();
+	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) != 0) {
 	}
-	// if ((len = send(this->_fd, index_html, strlen(index_html), 0)) != 0) {
-	// }
-	this->req.clear();
-	this->res.clear();
+	if (this->res.is_done())
+	{
+		webserv::Request::hr_iterator it = this->req.get_headers().find("connection");
+		if (it != this->req.get_headers().end())
+		{
+			if (webserv::str_to_lower(it->second) != "Keep-Alive")
+				close(this->_fd);
+		}
+		this->req.clear();
+		this->res.clear();
+		return (true);
+	}
+	return (false);
 }
 
 
@@ -130,6 +202,31 @@ void	webserv::Client::_fill_methods()
 	this->_methods.push_back("get");
 	this->_methods.push_back("post");
 	this->_methods.push_back("delete");
+}
+
+std::string	webserv::Client::_get_dir_html_tree()
+{
+	return ("");
+}
+
+std::string	webserv::Client::get_file_type(std::string path)
+{
+	std::string::reverse_iterator					it = path.rbegin();
+	std::map<std::string, std::string>::iterator	map_it = this->config.mime_types.begin();
+	std::string										extension;
+
+	for (; it != path.rend(); it++)
+	{
+		extension = (*it) + extension;
+		if ((*it) == '.')
+			break;
+	}
+	for (; map_it != this->config.mime_types.end(); map_it++)
+	{
+		if (map_it->second == extension)
+			return (map_it->first);
+	}
+	return (this->config.mime_types["default_type"]);
 }
 
 /************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
@@ -162,6 +259,7 @@ bool	webserv::Client::check_allowed_methods()
 		this->res.error(METHOD_NOT_IMPLEMENTED);
 		return (false);
 	}
+	// std::cout << "METHOD = " << (*it) << std::endl;
 	return (true);
 }
 
@@ -182,7 +280,9 @@ bool	webserv::Client::check_resources_exists()
 
 bool	webserv::Client::check_entity_length()
 {
-	if (this->_content_length > this->req.config.client_max_body_size)
+
+	std::cout << this->_content_length / __MB_IN_BYTE__ << " " << this->req.config.client_max_body_size << std::endl;
+	if ((this->_content_length / __MB_IN_BYTE__) > this->req.config.client_max_body_size)
 	{
 		this->res.error(PAYLOAD_TOO_LARGE);
 		return (false);
@@ -194,7 +294,7 @@ bool	webserv::Client::check_supported_media_type()
 {
 	// this->req.get_header_obj().print();
 	webserv::Request::hr_iterator it = this->req.get_headers().find("content-type");
-	if (it == this->req.get_headers().end())
+	if (it == this->req.get_headers().end() && this->req.content_length > 0)
 	{
 		this->res.error(BAD_REQUEST);
 		return (false);
@@ -207,6 +307,10 @@ bool	webserv::Client::check_supported_media_type()
 	return (true);
 }
 
+bool		webserv::Client::_file_exists(char const *str)
+{
+	return (access(str, F_OK) != -1);
+}
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)
 {
@@ -216,4 +320,15 @@ void	webserv::Client::set_fd(int fd)
 void	webserv::Client::set_config(webserv::Config &config)
 {
 	this->config = config;
+}
+
+std::string		&webserv::Client::get_full_path(void)
+{
+	this->_full_path = this->req.config.root;
+
+	if (this->_full_path.back() == '/')
+		this->_full_path.pop_back();
+	this->_full_path += this->req.get_header_obj().path;
+	
+	return (this->_full_path);
 }
