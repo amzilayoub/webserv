@@ -18,12 +18,12 @@ webserv::Header::Header(void) : _is_done(false), _raw_header_len(0)
 {
 }
 
-void	webserv::Header::parse(std::string &str)
+void	webserv::Header::parse(std::string &str, int len)
 {
 	std::string			headers;
 	size_t				pos;
 
-	this->_raw_string += str;
+	this->_raw_string += std::string(str, 0, len);
 
 	pos = this->_raw_string.find("\r\n\r\n");
 	if (pos == std::string::npos || this->_is_done)

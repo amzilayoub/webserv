@@ -36,7 +36,7 @@ class Request
 		bool			_headers_done;
 		bool			_has_error;
 		std::string		_header_special_char;
-		size_t			_body_length;
+		size_t			_request_length;
 		
 		
 	
@@ -56,7 +56,7 @@ class Request
 	std::string							&get_body();
 	bool								header_is_done();
 	webserv::Header						&get_header_obj(void);
-	void								add_body_length(int size);
+	void								add_request_length(int size);
 };
 
 };

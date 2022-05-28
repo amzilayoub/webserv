@@ -38,7 +38,7 @@ class Header
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
 	public:
-		void		parse(std::string &str);
+		void		parse(std::string &str, int len);
 		bool		is_done() const;
 		std::string	serialize();
 		void		clear();

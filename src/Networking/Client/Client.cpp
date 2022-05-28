@@ -41,9 +41,7 @@ int	webserv::Client::handle_request()
 	}
 	else if (len > 0)
 	{
-		buf[len] = '\0';
-		std::cout << "STRLEN = " << len << std::endl;
-		std::string buffer = buf;
+		std::string buffer(buf, len);
 		
 		if (!this->req.parse(buffer, len))
 		{
@@ -97,13 +95,13 @@ bool	webserv::Client::_save_file()
 	std::cout << filename << std::endl;
 	std::cout << extension << std::endl;
 
-	myfile.open(this->req.config.upload_path + "/" + filename + extension);
+	myfile.open(this->req.config.upload_path + "/" + filename + extension, std::ios::binary | std::ios::out);
 	if(!myfile.is_open())
 	{
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (false);
 	}
-	myfile << this->req.get_body().c_str();
+	myfile.write(this->req.get_body().c_str(), this->req.content_length);
 	myfile.close();
 	return 0;
 return true;
