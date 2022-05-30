@@ -41,6 +41,7 @@ class Response
 		std::string		_content_type;
 		bool			_start_chunked;
 		bool			_is_done;
+		bool			_one_shot;
 	
 	
 	/************************ CONSTRUCTOR/DESTRUCTIR ************************/
@@ -61,6 +62,8 @@ class Response
 	/************************ GETTERS/SETTERS ************************/
 	std::map<std::string, std::string>	&get_headers(void);
 	std::string &get_body();
+	void		set_body(std::string str);
+	void		set_one_shot(bool value);
 	bool		has_error(void);
 	bool		isEOF(void);
 };

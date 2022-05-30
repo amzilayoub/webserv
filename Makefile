@@ -13,6 +13,7 @@ SRC = main.cpp 											\
 	./src/Networking/Exchange/Response/Response.cpp		\
 	./src/Utils/split.cpp								\
 	./src/Utils/str_to_lower.cpp						\
+	./src/Utils/replace.cpp								\
 	./src/Logger/Logger.cpp								\
 
 

@@ -28,6 +28,7 @@ webserv::Response::Response()
 	this->status_code_list[INTERNAL_SERVER_ERROR] = "Internal Server Error";
 	this->status_code_list[MULTIPLE_CHOICES] = "Multiple Choices";
 	this->status_code_list[OK] = "OK";
+	this->status_code_list[FORBIDDEN] = "Forbidden";
 
 	this->error_pages[BAD_REQUEST] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Bad Request");
 	this->error_pages[METHOD_NOT_ALLOWED] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Method Not Allowed");
@@ -39,10 +40,13 @@ webserv::Response::Response()
 	this->error_pages[INTERNAL_SERVER_ERROR] = std::to_string(INTERNAL_SERVER_ERROR) + std::string(" Internal Server Error");
 	this->error_pages[MULTIPLE_CHOICES] = std::to_string(MULTIPLE_CHOICES) + std::string(" Multiple Choices");
 	this->error_pages[OK] = std::to_string(OK) + std::string(" OK");
+	this->error_pages[FORBIDDEN] = std::to_string(FORBIDDEN) + std::string(" Forbidden");
+
 	this->_status_code = -1;
 	this->_has_error = false;
 	this->_start_chunked = false;
 	this->_is_done = true;
+	this->_one_shot = false;
 }
 
 /************************ MEMBER FUNCTIONS ************************/
@@ -60,7 +64,7 @@ std::string	webserv::Response::serialize(void)
 	this->_response += this->_status_code + " ";
 	this->_response += this->_status_string + "\r\n";
 
-	if (this->_has_error)
+	if (this->_has_error || this->_one_shot)
 	{
 		this->_response += this->_header.serialize();
 		this->_response += this->_body;
@@ -93,7 +97,7 @@ std::string	webserv::Response::serialize(void)
 		this->_start_chunked = true;
 		this->_is_done = false;
 	}
-	std::cout << this->_response << std::endl;
+	// std::cout << this->_response << std::endl;
 	return (this->_response);
 }
 
@@ -108,6 +112,7 @@ void webserv::Response::clear()
 	this->_file.close();
 	this->_start_chunked = false;
 	this->_is_done = true;
+	this->_one_shot = false;
 }
 
 void		webserv::Response::set_file(std::string path, std::string content_type)
@@ -151,6 +156,11 @@ std::string &webserv::Response::get_body()
 	return (this->_body);
 }
 
+void		webserv::Response::set_body(std::string str)
+{
+	this->_body = str;
+}
+
 void	webserv::Response::set_header(std::string key, std::string value)
 {
 	this->_header.get_headers()[key] = value;
@@ -165,4 +175,9 @@ void	webserv::Response::set_status(int status_code)
 bool	webserv::Response::has_error(void)
 {
 	return (this->_has_error);
+}
+
+void		webserv::Response::set_one_shot(bool value)
+{
+	this->_one_shot = value;
 }

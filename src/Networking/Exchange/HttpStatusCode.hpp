@@ -19,5 +19,6 @@
 #  define INTERNAL_SERVER_ERROR 500
 #  define MULTIPLE_CHOICES 300
 #  define OK 200
+#  define FORBIDDEN 403
 
 # endif

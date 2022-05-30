@@ -18,6 +18,29 @@
 #  define __REQUEST_ERROR__ 2
 #  define __MB_IN_BYTE__ 1048576
 #  include <sys/stat.h>
+
+#  define DIR_LISTING_START "<!DOCTYPE html>\
+								<html>\
+								<head>\
+									<title>auto index</title>\
+								</head>\
+								<body>\
+									<h1>Index of ${title}</h1>\
+									<hr />\
+									<section>\
+									<table style=\"width: 100%\">"
+
+#  define DIR_LISTING_END "</table>\
+							</section>\
+							<hr />\
+						</body>\
+						</html>"
+
+#  define DIR_LISTING_ROW "<tr>\
+							<td style=\"width: 60%\"><a href=\"${link}\">${name}</a></td>\
+							<td style=\"width: 20%\">${date}</td>\
+							<td style=\"width: 20%\">${size}</td>\
+							</tr>"
 namespace webserv
 {
 
@@ -54,8 +77,9 @@ class Client
 		std::string	_get_file_name(void);
 		bool		_save_file(void);
 		bool		_file_exists(char const *str);
+		bool		_check_for_read(char const *str);
 		int			_handle_folder(void);
-		std::string	_get_dir_html_tree();
+		int			_get_dir_html_tree();
 		int			_post(void);
 		int			_get(void);
 

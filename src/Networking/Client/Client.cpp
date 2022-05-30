@@ -16,6 +16,8 @@
 # include <fstream>
 # include "../../Logger/Logger.hpp"
 # include "../../Utils/Utils.hpp"
+# include <dirent.h>
+# define _POSIX_C_SOURCE
 
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
@@ -103,14 +105,17 @@ int		webserv::Client::_get()
 		** if directory
 		*/
 		if (S_ISDIR(s.st_mode))
-		{
 			return (this->_handle_folder());
-		}
 		/*
 		** if file
 		*/
 		if (S_ISREG(s.st_mode))
 		{
+			if (!this->_check_for_read(this->_full_path.c_str()))
+			{
+				this->res.error(FORBIDDEN);
+				return (__REQUEST_ERROR__);
+			}
 			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
 			this->res.set_status(OK);
 			return (__REQUEST_DONE__);
@@ -127,8 +132,9 @@ int		webserv::Client::_get()
 
 int		webserv::Client::_handle_folder(void)
 {
-	std::string path = this->_full_path;
-	std::list<std::string>::iterator it = this->req.config.index.begin();
+	std::string							path = this->_full_path;
+	std::list<std::string>::iterator	it = this->req.config.index.begin();
+	bool								file_found = false;
 
 	if (path.back() != '/')
 		path.pop_back();
@@ -137,12 +143,20 @@ int		webserv::Client::_handle_folder(void)
 		std::string filepath = path + (*it);
 		if (this->_file_exists(filepath.c_str()))
 		{
+			file_found = true;
+			if (!this->_check_for_read(filepath.c_str()))
+				continue ;
 			this->res.set_file(filepath, this->get_file_type(filepath));
 			this->res.set_status(OK);
 			return (__REQUEST_DONE__);
 		}
 	}
-	return (__REQUEST_DONE__);
+	if (file_found && !this->config.config.front().autoindex)
+	{
+		this->res.error(FORBIDDEN);
+		return (__REQUEST_ERROR__);
+	}
+	return (this->_get_dir_html_tree());
 }
 
 bool	webserv::Client::_save_file()
@@ -204,9 +218,72 @@ void	webserv::Client::_fill_methods()
 	this->_methods.push_back("delete");
 }
 
-std::string	webserv::Client::_get_dir_html_tree()
+int	webserv::Client::_get_dir_html_tree()
 {
-	return ("");
+	std::string		page;
+	std::string		row;
+	DIR				*dir;
+	struct dirent	*ent;
+
+	page = DIR_LISTING_START;
+	webserv::replace(page, "${title}", this->req.get_header_obj().path);
+	if ((dir = opendir(this->_full_path.c_str())) != NULL)
+	{
+		while ((ent = readdir(dir)) != NULL)
+		{
+			struct stat attr;
+
+			if (std::string(ent->d_name) == ".")
+				continue ;
+			if (lstat((this->_full_path + "/" + ent->d_name).c_str(), &attr) == 0)
+			{
+				char		date[100];
+				std::string	name;
+				std::string	link;
+
+				row = DIR_LISTING_ROW;
+				name = std::string(ent->d_name) + (S_ISDIR(attr.st_mode) ? "/" : "");
+				link = name;
+				strftime(date, 100, "%Y-%m-%d %H:%M:%S", localtime(&(attr.st_mtime)));
+				if (std::string(ent->d_name) == "..")
+				{
+					std::string						path = this->req.get_header_obj().path;
+					std::string::reverse_iterator	it = path.rbegin();
+					std::string						current_dir;
+				
+					for (; it != path.rend(); it++)
+					{
+						if ((*it) == '/' && !current_dir.empty())
+							break ;
+						current_dir = (*it) + current_dir;
+					}
+					webserv::replace(path, current_dir, "");
+					name = "../";
+					link = path;
+					std::cout << "current_dir " << current_dir << std::endl;
+					std::cout << "path " << path << std::endl;
+				}
+				webserv::replace(row, "${name}", name);
+				webserv::replace(row, "${link}", link);
+				webserv::replace(row, "${date}", date);
+				webserv::replace(row, "${size}", (S_ISDIR(attr.st_mode) ? "-" : std::to_string(attr.st_size)));
+				page += row;
+			}
+		}
+	}
+	else
+	{
+		this->res.error(FORBIDDEN);
+		return (__REQUEST_ERROR__);
+	}
+	page += DIR_LISTING_END;
+
+	this->res.set_status(MULTIPLE_CHOICES);
+	this->res.set_header("Content-Length", std::to_string(page.length()));
+	this->res.set_one_shot(true);
+	this->res.set_body(page);
+
+	return (__REQUEST_DONE__);
 }
 
 std::string	webserv::Client::get_file_type(std::string path)
@@ -265,16 +342,11 @@ bool	webserv::Client::check_allowed_methods()
 
 bool	webserv::Client::check_resources_exists()
 {
-	std::fstream fs;
-
-	fs.open (this->req.config.root + this->req.get_header_obj().path, std::fstream::in);
-	if (!fs.is_open())
+	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);
-		fs.close();
 		return (false);
 	}
-	fs.close();
 	return (true);
 }
 
@@ -310,6 +382,11 @@ bool	webserv::Client::check_supported_media_type()
 bool		webserv::Client::_file_exists(char const *str)
 {
 	return (access(str, F_OK) != -1);
+}
+
+bool		webserv::Client::_check_for_read(char const *str)
+{
+	return (access(str, R_OK) != -1);
 }
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)
