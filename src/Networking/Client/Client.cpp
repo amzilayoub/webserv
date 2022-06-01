@@ -104,18 +104,18 @@ int		webserv::Client::_get()
 		/*
 		** if directory
 		*/
-		if (S_ISDIR(s.st_mode))
+		if (!this->_check_for_read(this->_full_path.c_str()))
+		{
+			this->res.error(FORBIDDEN);
+			return (__REQUEST_ERROR__);
+		}
+		else if (S_ISDIR(s.st_mode))
 			return (this->_handle_folder());
 		/*
 		** if file
 		*/
-		if (S_ISREG(s.st_mode))
+		else if (S_ISREG(s.st_mode))
 		{
-			if (!this->_check_for_read(this->_full_path.c_str()))
-			{
-				this->res.error(FORBIDDEN);
-				return (__REQUEST_ERROR__);
-			}
 			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
 			this->res.set_status(OK);
 			return (__REQUEST_DONE__);
