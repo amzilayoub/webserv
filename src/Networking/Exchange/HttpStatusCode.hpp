@@ -20,5 +20,6 @@
 #  define MULTIPLE_CHOICES 300
 #  define OK 200
 #  define FORBIDDEN 403
+#  define NO_CONTENT 204
 
 # endif

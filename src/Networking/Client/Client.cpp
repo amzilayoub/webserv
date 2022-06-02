@@ -18,7 +18,8 @@
 # include "../../Utils/Utils.hpp"
 # include <dirent.h>
 # define _POSIX_C_SOURCE
-
+# include <stdio.h>
+#include <ftw.h>
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
 {
@@ -47,7 +48,6 @@ int	webserv::Client::handle_request()
 	{
 		std::string buffer(buf, len);
 		
-		// std::cout << "REQ =" << std::string(buf, 0, len) << std::endl;
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -63,6 +63,9 @@ int	webserv::Client::handle_request()
 	if (this->req.is_done())
 	{
 		// std::cout << "REQ DONE" << std::endl;
+		webserv::Request::hr_iterator it = this->req.get_headers().find("connection");
+		if (it != this->req.get_headers().end())
+			this->res.set_header("Connection", it->second);
 		this->_full_path = this->get_full_path();
 		if (this->req.get_headers().find("content-length") != this->req.get_headers().end())
 			this->_content_length = std::stoi(this->req.get_headers()["content-length"]);
@@ -70,10 +73,13 @@ int	webserv::Client::handle_request()
 			return (__REQUEST_ERROR__);
 		if (!this->check_resources_exists())
 			return (__REQUEST_ERROR__);
+		this->_save_file("/tmp");
 		if (this->req.get_header_obj().method == "post")
 			return (this->_post());
 		else if (this->req.get_header_obj().method == "get")
 			return (this->_get());
+		else if (this->req.get_header_obj().method == "delete")
+			return (this->_delete());
 	}
 	return (__REQUEST_IN_PROGRESS__);
 }
@@ -87,7 +93,8 @@ int		webserv::Client::_post()
 	if (!this->check_supported_media_type())
 		return (__REQUEST_ERROR__);
 	if (this->req.content_length > 0)
-		this->_save_file();
+		this->_save_file(this->req.config.upload_path);
+	this->res.set_one_shot(true);
 	this->res.set_header("Location", this->req.get_header_obj().path);
 	this->res.set_status(SEE_OTHER);
 	return (__REQUEST_DONE__);
@@ -130,20 +137,95 @@ int		webserv::Client::_get()
 	return (__REQUEST_DONE__);
 }
 
+int		webserv::Client::_delete()
+{
+struct stat s;
+
+	webserv::Logger::info(std::string("DELETE: ") + this->req.get_header_obj().path);
+
+	if (lstat(this->_full_path.c_str(), &s) == 0)
+	{
+		/*
+		** if directory
+		*/
+		if (!this->_check_for_read(this->_full_path.c_str()))
+		{
+			this->res.error(FORBIDDEN);
+			return (__REQUEST_ERROR__);
+		}
+		// delete the whole folder
+		else if (S_ISDIR(s.st_mode))
+			return (this->_delete_folder());
+		/*
+		** if file
+		*/
+		else if (S_ISREG(s.st_mode))
+			return (this->_delete_file(this->_full_path.c_str()));
+	} else
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	// if (this->req.config.autoindex)
+
+	return (__REQUEST_DONE__);
+}
+
+int		webserv::Client::_delete_file(std::string path)
+{
+	if (!remove(path.c_str()))
+	{
+		this->res.set_one_shot(true);
+		this->res.set_status(NO_CONTENT);
+		return (__REQUEST_DONE__);
+	}
+	this->res.error(INTERNAL_SERVER_ERROR);
+	return (__REQUEST_ERROR__);
+}
+
+int		webserv::Client::_delete_folder()
+{
+	DIR				*dir;
+	std::string		path;
+
+	path = this->_full_path;
+
+	if (path.back() != '/')
+		path += "/";
+
+
+	if ((dir = opendir(path.c_str())) != NULL)
+	{
+		closedir(dir);
+		if (nftw(path.c_str(), unlink_file, 64, FTW_DEPTH | FTW_PHYS))
+		{
+			this->res.error(INTERNAL_SERVER_ERROR);
+			return (__REQUEST_ERROR__);
+		}
+	}
+	else
+	{
+		this->res.error(FORBIDDEN);
+		return (__REQUEST_ERROR__);
+	}
+	this->res.set_one_shot(true);
+	this->res.set_status(NO_CONTENT);
+
+	return (__REQUEST_DONE__);
+}
+
 int		webserv::Client::_handle_folder(void)
 {
 	std::string							path = this->_full_path;
 	std::list<std::string>::iterator	it = this->req.config.index.begin();
-	bool								file_found = false;
 
 	if (path.back() != '/')
-		path.pop_back();
+		path += "/";
 	for (; it != this->req.config.index.end(); it++)
 	{
 		std::string filepath = path + (*it);
 		if (this->_file_exists(filepath.c_str()))
 		{
-			file_found = true;
 			if (!this->_check_for_read(filepath.c_str()))
 				continue ;
 			this->res.set_file(filepath, this->get_file_type(filepath));
@@ -151,7 +233,7 @@ int		webserv::Client::_handle_folder(void)
 			return (__REQUEST_DONE__);
 		}
 	}
-	if (file_found && !this->config.config.front().autoindex)
+	if (!this->config.config.front().autoindex)
 	{
 		this->res.error(FORBIDDEN);
 		return (__REQUEST_ERROR__);
@@ -159,7 +241,7 @@ int		webserv::Client::_handle_folder(void)
 	return (this->_get_dir_html_tree());
 }
 
-bool	webserv::Client::_save_file()
+bool	webserv::Client::_save_file(std::string path_to_upload)
 {
 	char					filename[100];
 	std::string extension = this->config.get_file_extension(this->req.get_headers()["content-type"]);
@@ -168,10 +250,9 @@ bool	webserv::Client::_save_file()
 	std::ofstream			myfile;
 
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
-	std::cout << filename << std::endl;
-	std::cout << extension << std::endl;
 
-	myfile.open(this->req.config.upload_path + "/" + filename + extension, std::ios::binary | std::ios::out);
+	this->_file_name = filename + extension;
+	myfile.open(path_to_upload + "/" + this->_file_name, std::ios::binary | std::ios::out);
 	if(!myfile.is_open())
 	{
 		this->res.error(INTERNAL_SERVER_ERROR);
@@ -352,8 +433,6 @@ bool	webserv::Client::check_resources_exists()
 
 bool	webserv::Client::check_entity_length()
 {
-
-	std::cout << this->_content_length / __MB_IN_BYTE__ << " " << this->req.config.client_max_body_size << std::endl;
 	if ((this->_content_length / __MB_IN_BYTE__) > this->req.config.client_max_body_size)
 	{
 		this->res.error(PAYLOAD_TOO_LARGE);
@@ -364,7 +443,6 @@ bool	webserv::Client::check_entity_length()
 
 bool	webserv::Client::check_supported_media_type()
 {
-	// this->req.get_header_obj().print();
 	webserv::Request::hr_iterator it = this->req.get_headers().find("content-type");
 	if (it == this->req.get_headers().end() && this->req.content_length > 0)
 	{

@@ -29,6 +29,7 @@ webserv::Response::Response()
 	this->status_code_list[MULTIPLE_CHOICES] = "Multiple Choices";
 	this->status_code_list[OK] = "OK";
 	this->status_code_list[FORBIDDEN] = "Forbidden";
+	this->status_code_list[NO_CONTENT] = "No Content";
 
 	this->error_pages[BAD_REQUEST] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Bad Request");
 	this->error_pages[METHOD_NOT_ALLOWED] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Method Not Allowed");
@@ -41,6 +42,7 @@ webserv::Response::Response()
 	this->error_pages[MULTIPLE_CHOICES] = std::to_string(MULTIPLE_CHOICES) + std::string(" Multiple Choices");
 	this->error_pages[OK] = std::to_string(OK) + std::string(" OK");
 	this->error_pages[FORBIDDEN] = std::to_string(FORBIDDEN) + std::string(" Forbidden");
+	this->error_pages[NO_CONTENT] = std::to_string(NO_CONTENT) + std::string(" No Content");
 
 	this->_status_code = -1;
 	this->_has_error = false;

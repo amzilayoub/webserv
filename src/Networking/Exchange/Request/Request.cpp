@@ -64,7 +64,7 @@ bool	webserv::Request::is_done(void)
 	**the -4 is for \r\n\r\n
 	*/
 	size_t body_length = this->_request_length - this->get_header_obj().get_raw_header_len() - 4;
-	return ((body_length) == this->content_length || this->_header.method == "get");
+	return ((body_length) == this->content_length || this->content_length == 0);
 }
 
 /************************ GETTERS/SETTERS ************************/

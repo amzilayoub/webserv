@@ -54,6 +54,7 @@ class Client
 		int						_content_length;
 		std::list<std::string>	_methods;
 		std::string				_full_path;
+		std::string				_file_name;
 
 	public:
 		webserv::Request	req;
@@ -75,13 +76,16 @@ class Client
 	private:
 		void		_fill_methods(void);
 		std::string	_get_file_name(void);
-		bool		_save_file(void);
+		bool		_save_file(std::string path_to_upload);
 		bool		_file_exists(char const *str);
 		bool		_check_for_read(char const *str);
 		int			_handle_folder(void);
 		int			_get_dir_html_tree();
+		int			_delete_folder();
+		int			_delete_file(std::string path);
 		int			_post(void);
 		int			_get(void);
+		int			_delete(void);
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
 	public:
