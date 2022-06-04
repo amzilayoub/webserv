@@ -12,6 +12,7 @@
 #  include "../Exchange/Request/Request.hpp"
 #  include "../Exchange/Response/Response.hpp"
 #  include "../../Config/Config.hpp"
+#  include <sys/stat.h>
 
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
@@ -22,7 +23,7 @@
 #  define __REMOVE_CLIENT__ 3
 
 #  define __MB_IN_BYTE__ 1048576
-#  include <sys/stat.h>
+#  define __BYTE_TO_READ__ 1024
 
 #  define DIR_LISTING_START "<!DOCTYPE html>\
 								<html>\
@@ -77,6 +78,7 @@ class Client
 		int			handle_request(void);
 		int			handle_response(void);
 		std::string	get_file_type(std::string path);
+		void		match_config(void);
 	
 	private:
 		void		_fill_methods(void);

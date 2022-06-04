@@ -14,6 +14,7 @@
 #  include "../Exchange/Request/Request.hpp"
 #  include "../Client/Client.hpp"
 #  include <map>
+#  include <list>
 #  include "../../Config/Config.hpp"
 
 #  define __MAX_BACKLOG__ 128
@@ -25,10 +26,13 @@ class Server
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		Socket								sock;
-		Kqueue								kq;
-		std::map<int, webserv::Client>		clients;
-		webserv::Config						&config;
+		// Socket												sock;
+		Kqueue									kq;
+		std::map<int, webserv::Client>			clients;
+		std::map<std::string, webserv::Store>	virt_serv_config;
+		webserv::Config							&config;
+		std::list<webserv::Socket>				sockets;
+		std::list<int>							used_ports;
 
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
@@ -41,7 +45,7 @@ class Server
 		void	lunch();
 	
 	private:
-		void	_lunch_worker(webserv::Request &req);
+		void	_lunch_worker();
 };
 
 }

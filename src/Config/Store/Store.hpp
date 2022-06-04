@@ -23,6 +23,7 @@ class Store
 		std::string							host;
 		unsigned int						port;
 		std::string							root;
+		std::string							server_name;
 		std::list<std::string>				allow_methods;
 		std::string							upload_path;
 		std::list<std::string>				index;
@@ -36,11 +37,15 @@ class Store
 	/************************ CONSTRUCOTRS ************************/
 	public:
 		Store(void);
+		Store(webserv::Store const &rhs);
 		~Store(void);
 	
 	/************************ MEMBER FUNCTIONS ************************/
 	void	print() const;
 	void	clear();
+
+	/************************ OPERATOR OVERLOAD ************************/
+	webserv::Store &operator=(webserv::Store const &rhs);
 };
 
 }

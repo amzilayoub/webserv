@@ -18,17 +18,24 @@ webserv::Store::Store()
 	this->clear();
 }
 
+webserv::Store::Store(webserv::Store const &rhs)
+{
+	this->clear();
+	(*this) = rhs;
+}
+
 webserv::Store::~Store()
 {
 
 }
 
-/************************ LEFT SHIFT OPERATOR ************************/
+/************************ MEMBER FUNCTIONS************************/
 void	webserv::Store::clear()
 {
 	this->host = "0.0.0.0";
 	this->port = 80;
 	this->root.clear();
+	this->server_name.clear();
 	this->allow_methods.clear();
 	this->upload_path.clear();
 	this->index.clear();
@@ -44,7 +51,9 @@ void	webserv::Store::print() const
 	std::cout << "host: " << this->host << std::endl;
 	std::cout << "port: " << this->port << std::endl;
 	std::cout << "root: " << this->root << std::endl;
+	std::cout << "server_name: " << this->server_name << std::endl;
 	
+	return ;
 	std::cout << "allow_methods: " << std::endl;
 	std::list<std::string>::const_iterator allow_methods_it = this->allow_methods.begin();
 	for (; allow_methods_it != this->allow_methods.end(); ++allow_methods_it)
@@ -75,4 +84,24 @@ void	webserv::Store::print() const
 	std::list<Store>::const_iterator location_it = this->location_object.begin();
 	for (; location_it != this->location_object.end(); location_it++)
 		(*location_it).print();
+}
+
+/************************ OPERATOR OVERLOAD ************************/
+webserv::Store &webserv::Store::operator=(webserv::Store const &rhs)
+{
+	this->port = rhs.port;
+	this->host = rhs.host;
+	this->root = rhs.root;
+	this->server_name = rhs.server_name;
+	this->allow_methods = rhs.allow_methods;
+	this->upload_path = rhs.upload_path;
+	this->index = rhs.index;
+	this->error_page = rhs.error_page;
+	this->autoindex = rhs.autoindex;
+	this->client_max_body_size = rhs.client_max_body_size;
+	this->redirection = rhs.redirection;
+	this->location = rhs.location;
+	this->location_object = rhs.location_object;
+
+	return (*this);
 }

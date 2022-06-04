@@ -24,7 +24,6 @@ webserv::Socket::Socket()
 
 webserv::Socket::~Socket()
 {
-	close(this->_socket);
 }
 
 /************************ MEMBER FUNCTIONS ************************/

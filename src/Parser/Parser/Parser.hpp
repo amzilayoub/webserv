@@ -65,6 +65,7 @@ class Parser
 		bool _server_token(webserv::Store &store);
 		bool _listen_token(webserv::Store &store);
 		bool _root_token(webserv::Store &store);
+		bool _server_name_token(webserv::Store &store);
 		bool _allow_methods_token(webserv::Store &store);
 		bool _upload_path_token(webserv::Store &store);
 		bool _index_token(webserv::Store &store);

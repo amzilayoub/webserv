@@ -19,7 +19,9 @@
 # include <dirent.h>
 # define _POSIX_C_SOURCE
 # include <stdio.h>
-#include <ftw.h>
+# include <ftw.h>
+
+
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
 {
@@ -32,16 +34,17 @@ webserv::Client::Client(int fd) : _fd(fd), _offset(0)
 
 webserv::Client::~Client(void)
 {
-	// close (this->_fd);
+	close (this->_fd);
 }
 
 /************************ MEMBER FUNCTIONS ************************/
 int	webserv::Client::handle_request()
 {
 	int len;
-	char buf[1000];
+	char buf[__BYTE_TO_READ__];
 
-	if ((len = recv(this->_fd, buf, 999, 0)) == 0) {
+	if ((len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0)) == 0) {
+		webserv::Logger::warning("Client disconnected...");
 		close(this->_fd);
 	}
 	else if (len > 0)
@@ -59,10 +62,15 @@ int	webserv::Client::handle_request()
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
-	// std::cout << buf << std::endl;
+	// std::cout << std::string(buf, len) << std::endl;
 	if (this->req.is_done())
 	{
+		// this->match_config();
 		// std::cout << "REQ DONE" << std::endl;
+		this->_content_length = 0;
+		this->res.set_header("Host", this->req.config.host + ":" + std::to_string(this->req.config.port));
+		this->res.set_header("Server", this->req.config.server_name);
+
 		webserv::Request::hr_iterator it = this->req.get_headers().find("connection");
 		if (it != this->req.get_headers().end())
 			this->res.set_header("Connection", it->second);
@@ -87,6 +95,12 @@ int	webserv::Client::handle_request()
 	}
 	return (__REQUEST_IN_PROGRESS__);
 }
+
+void		webserv::Client::match_config()
+{
+
+}
+
 
 int		webserv::Client::_post()
 {
@@ -233,7 +247,7 @@ int		webserv::Client::_handle_folder(void)
 			return (__REQUEST_DONE__);
 		}
 	}
-	if (!this->config.config.front().autoindex)
+	if (!this->req.config.autoindex)
 	{
 		this->res.error(FORBIDDEN);
 		return (__REQUEST_ERROR__);
@@ -275,6 +289,7 @@ int		webserv::Client::handle_response()
 
 	action = __RESPONSE_IN_PROGRESS__;
 	buf = this->res.serialize();
+	// std::cout << "RESPONSE = " << buf << std::endl;
 	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) != 0) {
 	}
 	if (this->res.is_done())
@@ -283,9 +298,10 @@ int		webserv::Client::handle_response()
 		webserv::Request::hr_iterator it = this->req.get_headers().find("connection");
 		if (it != this->req.get_headers().end())
 		{
-			if (webserv::str_to_lower(it->second) != "Keep-Alive")
+			if (webserv::str_to_lower(it->second) != "keep-alive")
 			{
 				action = __REMOVE_CLIENT__;
+				webserv::Logger::warning("Client disconnected...");
 				close(this->_fd);
 			}
 		}

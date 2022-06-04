@@ -19,6 +19,7 @@ webserv::Parser::Parser(webserv::CharacterReader &cr)
 	// this->_special_char = "{}:;$";
 	this->_token_analyser["server"] = &Parser::_server_token;
 	this->_token_analyser["listen"] = &Parser::_listen_token;
+	this->_token_analyser["server_name"] = &Parser::_server_name_token;
 	this->_token_analyser["root"] = &Parser::_root_token;
 	this->_token_analyser["allow_methods"] = &Parser::_allow_methods_token;
 	this->_token_analyser["upload_path"] = &Parser::_upload_path_token;
@@ -134,6 +135,8 @@ bool webserv::Parser::_listen_token(webserv::Store &store)
 			if (isValid)
 				store.port = std::stoi(token);
 		}
+		else
+			store.port = 80;
 		return (this->_is_semicolon());
 	}
 	return (false);
@@ -150,6 +153,15 @@ bool webserv::Parser::_root_token(webserv::Store &store)
 		return (this->_is_semicolon());
 	}
 	return (false);
+}
+
+bool webserv::Parser::_server_name_token(webserv::Store &store)
+{
+	std::string	value;
+
+	value = this->_lexer->join();
+	store.server_name = value;
+	return (this->_is_semicolon());
 }
 
 bool webserv::Parser::_allow_methods_token(webserv::Store &store)
