@@ -16,6 +16,11 @@
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
 #  define __REQUEST_ERROR__ 2
+
+#  define __RESPONSE_DONE__ __REQUEST_DONE__
+#  define __RESPONSE_IN_PROGRESS__ __REQUEST_IN_PROGRESS__
+#  define __REMOVE_CLIENT__ 3
+
 #  define __MB_IN_BYTE__ 1048576
 #  include <sys/stat.h>
 
@@ -70,7 +75,7 @@ class Client
 	/************************ MEMBER FUNCTIONS ************************/
 	public:
 		int			handle_request(void);
-		bool		handle_response(void);
+		int			handle_response(void);
 		std::string	get_file_type(std::string path);
 	
 	private:

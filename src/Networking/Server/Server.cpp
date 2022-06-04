@@ -84,8 +84,12 @@ void	webserv::Server::_lunch_worker(webserv::Request &req)
 		}
 		else if (this->kq.is_write_available(i))
 		{
+			int ret;
+
 			webserv::Logger::info("Sending response !");
-			this->clients[fd].handle_response();
+			ret = this->clients[fd].handle_response();
+			if (ret == __REMOVE_CLIENT__)
+				this->clients.erase(fd);
 		}
 	}
 }

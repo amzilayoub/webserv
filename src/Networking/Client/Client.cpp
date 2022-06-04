@@ -73,6 +73,10 @@ int	webserv::Client::handle_request()
 			return (__REQUEST_ERROR__);
 		if (!this->check_resources_exists())
 			return (__REQUEST_ERROR__);
+		if (!this->check_entity_length())
+			return (__REQUEST_ERROR__);
+		if (!this->check_supported_media_type())
+			return (__REQUEST_ERROR__);
 		this->_save_file("/tmp");
 		if (this->req.get_header_obj().method == "post")
 			return (this->_post());
@@ -88,10 +92,6 @@ int		webserv::Client::_post()
 {
 	webserv::Logger::info(std::string("POST: ") + this->req.get_header_obj().path);
 
-	if (!this->check_entity_length())
-		return (__REQUEST_ERROR__);
-	if (!this->check_supported_media_type())
-		return (__REQUEST_ERROR__);
 	if (this->req.content_length > 0)
 		this->_save_file(this->req.config.upload_path);
 	this->res.set_one_shot(true);
@@ -264,31 +264,35 @@ bool	webserv::Client::_save_file(std::string path_to_upload)
 return true;
 }
 
-bool	webserv::Client::handle_response()
+int		webserv::Client::handle_response()
 {
-	int len = 0;
-	std::string buf;
+	int			len = 0;
+	std::string	buf;
+	int			action;
 	static const char* index_html = "HTTP/1.0 405 OK\r\n" \
 								"Content-Length: 22\r\n\r\n" \
 								"405 Method not allowed\r\n";
 
-	
+	action = __RESPONSE_IN_PROGRESS__;
 	buf = this->res.serialize();
 	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) != 0) {
 	}
 	if (this->res.is_done())
 	{
+		action = __RESPONSE_DONE__;
 		webserv::Request::hr_iterator it = this->req.get_headers().find("connection");
 		if (it != this->req.get_headers().end())
 		{
 			if (webserv::str_to_lower(it->second) != "Keep-Alive")
+			{
+				action = __REMOVE_CLIENT__;
 				close(this->_fd);
+			}
 		}
 		this->req.clear();
 		this->res.clear();
-		return (true);
 	}
-	return (false);
+	return (action);
 }
 
 
@@ -341,8 +345,6 @@ int	webserv::Client::_get_dir_html_tree()
 					webserv::replace(path, current_dir, "");
 					name = "../";
 					link = path;
-					std::cout << "current_dir " << current_dir << std::endl;
-					std::cout << "path " << path << std::endl;
 				}
 				webserv::replace(row, "${name}", name);
 				webserv::replace(row, "${link}", link);
