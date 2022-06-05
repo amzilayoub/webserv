@@ -50,7 +50,7 @@ webserv::Server::Server(webserv::Config &config) : config(config)
 		if (port_it != this->used_ports.end())
 			continue ;
 		tmp_sock.create_socket(AF_INET, SOCK_STREAM, 0);
-		tmp_sock.bind_socket(inet_addr("127.0.0.1"), it->port);
+		tmp_sock.bind_socket(INADDR_ANY, it->port);
 		tmp_sock.listen_socket(__MAX_BACKLOG__);
 		this->used_ports.push_back(it->port);
 		this->sockets.push_back(tmp_sock);
@@ -100,7 +100,7 @@ void	webserv::Server::_lunch_worker()
 				}
 				this->clients[clientfd].set_fd(clientfd);
 				this->clients[clientfd].req.set_config(this->config.config.front());
-				this->clients[clientfd].set_config(this->config);
+				this->clients[clientfd].set_config(this->config, this->virt_serv_config);
 				continue ;
 			}
 		}

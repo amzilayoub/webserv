@@ -30,6 +30,7 @@ webserv::Client::Client(void)
 webserv::Client::Client(int fd) : _fd(fd), _offset(0)
 {
 	this->_fill_methods();
+	this->_set_port();
 }
 
 webserv::Client::~Client(void)
@@ -65,7 +66,7 @@ int	webserv::Client::handle_request()
 	// std::cout << std::string(buf, len) << std::endl;
 	if (this->req.is_done())
 	{
-		// this->match_config();
+		this->match_config();
 		// std::cout << "REQ DONE" << std::endl;
 		this->_content_length = 0;
 		this->res.set_header("Host", this->req.config.host + ":" + std::to_string(this->req.config.port));
@@ -98,7 +99,74 @@ int	webserv::Client::handle_request()
 
 void		webserv::Client::match_config()
 {
+	std::list<webserv::Store>						possible_servers;
+	std::map<std::string, webserv::Store>::iterator	it;
+	std::list<webserv::Store>::iterator				it_poss_serv;
+	webserv::Response::hr_iterator					it_header;
+	
+	it = this->_servers_list.begin();
+	/*
+	** Gets all the servers that has the same targeted port
+	*/
+	for (; it != this->_servers_list.end(); it++)
+	{
+		std::string key;
 
+		key = ":" + std::to_string(this->_port) + "_";
+		if ((it->first.find(key) != std::string::npos) && it->second.port == this->_port)
+			possible_servers.push_back(it->second);
+	}
+	
+	/*
+	** Then filter them by host
+	*/
+	it_header = this->req.get_headers().find("host");
+	if (it_header != this->req.get_headers().end())
+	{
+		it_poss_serv = possible_servers.begin();
+		for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
+		{
+
+			if (it_header->second.find(":") != std::string::npos)
+			{
+				std::string str;
+
+				str = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
+				if (str.find(it_header->second) == std::string::npos)
+				{
+					possible_servers.erase(it_poss_serv);
+					it_poss_serv = possible_servers.begin();
+					continue ;
+				}
+			}
+		}
+	}
+
+	/*
+	** Then filter them by server
+	*/
+	it_header = this->req.get_headers().find("server");
+	if (it_header != this->req.get_headers().end())
+	{
+		it_poss_serv = possible_servers.begin();
+		for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
+		{
+			std::string server_name;
+
+			server_name = it_poss_serv->server_name;
+			if (webserv::str_to_lower(server_name) != webserv::str_to_lower(it_header->second))
+			{
+				possible_servers.erase(it_poss_serv);
+				it_poss_serv = possible_servers.begin();
+				continue ;
+			}
+
+		}
+	}
+	std::cout << "================ MATCHED SERVER ==============" << std::endl;
+	possible_servers.front().print();
+	std::cout << "================ MATCHED SERVER ==============" << std::endl;
+	this->req.set_config(possible_servers.front());
 }
 
 
@@ -488,11 +556,22 @@ bool		webserv::Client::_check_for_read(char const *str)
 void	webserv::Client::set_fd(int fd)
 {
 	this->_fd = fd;
+	this->_set_port();
 }
 
-void	webserv::Client::set_config(webserv::Config &config)
+void	webserv::Client::_set_port(void)
+{
+	socklen_t len = sizeof(this->_sin);
+
+	if (getsockname(this->_fd, (struct sockaddr *)&this->_sin, &len) == -1)
+		webserv::Logger::error("set_port function: getsockname");
+	this->_port = ntohs(this->_sin.sin_port);
+}
+
+void	webserv::Client::set_config(webserv::Config &config, std::map<std::string, webserv::Store>& servers_list)
 {
 	this->config = config;
+	this->_servers_list = servers_list;
 }
 
 std::string		&webserv::Client::get_full_path(void)

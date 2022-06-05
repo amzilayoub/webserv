@@ -13,6 +13,7 @@
 #  include "../Exchange/Response/Response.hpp"
 #  include "../../Config/Config.hpp"
 #  include <sys/stat.h>
+#  include <netinet/in.h>
 
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
@@ -55,12 +56,15 @@ class Client
 
 	/************************ MEMBER ATTRIBUTES ************************/
 	private:
-		int						_fd;
-		int						_offset;
-		int						_content_length;
-		std::list<std::string>	_methods;
-		std::string				_full_path;
-		std::string				_file_name;
+		int										_fd;
+		int										_offset;
+		int										_content_length;
+		std::list<std::string>					_methods;
+		std::string								_full_path;
+		std::string								_file_name;
+		int										_port;
+		struct sockaddr_in						_sin;
+		std::map<std::string, webserv::Store>	_servers_list;
 
 	public:
 		webserv::Request	req;
@@ -104,8 +108,11 @@ class Client
 	/************************ GETTERS/SETTERS ************************/
 	public:
 		void			set_fd(int fd);
-		void			set_config(webserv::Config &config);
+		void			set_config(webserv::Config &config, std::map<std::string, webserv::Store> &servers_list);
 		std::string		&get_full_path(void);
+
+	private:
+		void			_set_port(void);
 };
 
 }
