@@ -530,7 +530,7 @@ bool	webserv::Client::check_allowed_methods()
 
 bool	webserv::Client::check_resources_exists()
 {
-	// std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
+	std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
 	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);

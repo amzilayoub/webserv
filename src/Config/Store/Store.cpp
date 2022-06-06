@@ -79,6 +79,8 @@ bool	webserv::Store::check()
 			return (this->error("Cannot add host inside the location"));
 		else if (!it->upload_path.empty())
 			return (this->error("Cannot add upload_path inside the location"));
+		else if (!it->server_name.empty())
+			return (this->error("Cannot add server_name inside the location"));
 		else if (!it->error_page.empty())
 			return (this->error("Cannot add error_page inside the location"));
 		else if (!it->redirection.empty())
