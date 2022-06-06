@@ -83,6 +83,8 @@ bool webserv::Request::handle_chunked_request(std::string &str, int len)
 
 		index = this->_body.find("\r\n", last_index);
 		to_read = this->to_int(this->_body.substr(last_index, index));
+		if (to_read == -1)
+			return (false);
 		tmp = this->_body.substr(last_index, index);
 		this->content_length += to_read;
 		if (to_read == 0)
@@ -222,7 +224,7 @@ int	webserv::Request::to_int(std::string str)
 	{
 	}
 	webserv::Logger::error("to_int functions");
-	
+	return (-1);
 }
 
 bool	webserv::Request::is_done(void)

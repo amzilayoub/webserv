@@ -116,7 +116,6 @@ void	webserv::Server::_lunch_worker()
 				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD);
 			else if (ret == __REMOVE_CLIENT__)
 				this->clients.erase(fd);
-
 		}
 		else if (this->kq.is_write_available(i))
 		{

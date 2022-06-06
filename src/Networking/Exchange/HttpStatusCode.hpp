@@ -21,5 +21,6 @@
 #  define OK 200
 #  define FORBIDDEN 403
 #  define NO_CONTENT 204
+#  define MOVED_PERMANENTLY 301
 
 # endif

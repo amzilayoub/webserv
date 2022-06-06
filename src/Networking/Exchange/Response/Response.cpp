@@ -11,6 +11,7 @@
 # include "../HttpStatusCode.hpp"
 # include <iostream>
 # include <sstream>
+# include "../../../Logger/Logger.hpp"
 
 // # include <stdlib.h>
 /************************ MEMBER ATTRIBUTES ************************/
@@ -30,6 +31,7 @@ webserv::Response::Response()
 	this->status_code_list[OK] = "OK";
 	this->status_code_list[FORBIDDEN] = "Forbidden";
 	this->status_code_list[NO_CONTENT] = "No Content";
+	this->status_code_list[MOVED_PERMANENTLY] = "Moved Permanently";
 
 	this->error_pages[BAD_REQUEST] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Bad Request");
 	this->error_pages[METHOD_NOT_ALLOWED] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Method Not Allowed");
@@ -43,6 +45,7 @@ webserv::Response::Response()
 	this->error_pages[OK] = std::to_string(OK) + std::string(" OK");
 	this->error_pages[FORBIDDEN] = std::to_string(FORBIDDEN) + std::string(" Forbidden");
 	this->error_pages[NO_CONTENT] = std::to_string(NO_CONTENT) + std::string(" No Content");
+	this->error_pages[MOVED_PERMANENTLY] = std::to_string(MOVED_PERMANENTLY) + std::string(" Moved Permanently");
 
 	this->_status_code = -1;
 	this->_has_error = false;
@@ -54,6 +57,11 @@ webserv::Response::Response()
 /************************ MEMBER FUNCTIONS ************************/
 void	webserv::Response::error(int status_code)
 {
+	std::string error_content;
+
+	error_content = this->get_error_file_content(status_code);
+	if (error_content != "")
+		this->error_pages[status_code] = error_content;
 	this->set_status(status_code);
 	this->get_headers()["Content-Length"] = std::to_string(this->error_pages[status_code].length());
 	this->_body = this->error_pages[status_code];
@@ -188,4 +196,25 @@ void		webserv::Response::set_one_shot(bool value)
 void	webserv::Response::set_config(webserv::Store config)
 {
 	this->config = config;
+}
+
+std::string	webserv::Response::get_error_file_content(int status_code)
+{
+	std::map<int, std::string>::iterator	it;
+	std::ifstream							ifs;
+	std::string								content;
+
+	it = this->config.error_page.find(status_code);
+	if (it == this->config.error_page.end())
+		return ("");
+	ifs.open(it->second);
+	if (ifs.is_open())
+	{
+		std::string line;
+		
+		while (std::getline(ifs, line))
+			content += line;
+		return (content);
+	}
+	return ("");
 }

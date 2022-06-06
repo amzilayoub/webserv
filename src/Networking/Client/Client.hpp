@@ -98,6 +98,7 @@ class Client
 		int			_get(void);
 		int			_delete(void);
 		void		_url_decode();
+		bool		_handle_redirection();
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
 	public:

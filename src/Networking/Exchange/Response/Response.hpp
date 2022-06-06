@@ -68,6 +68,7 @@ class Response
 	void		set_body(std::string str);
 	void		set_one_shot(bool value);
 	bool		has_error(void);
+	std::string	get_error_file_content(int status_code);
 	bool		isEOF(void);
 };
 

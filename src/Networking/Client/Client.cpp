@@ -77,6 +77,8 @@ int	webserv::Client::handle_request()
 		if (it != this->req.get_headers().end())
 			this->res.set_header("Connection", it->second);
 		this->_full_path = this->get_full_path();
+		if (this->_handle_redirection())
+			return (__REQUEST_DONE__);
 		if (this->req.get_headers().find("content-length") != this->req.get_headers().end())
 			this->_content_length = std::stoi(this->req.get_headers()["content-length"]);
 		if (!this->check_allowed_methods())
@@ -591,6 +593,23 @@ bool		webserv::Client::_file_exists(char const *str)
 bool		webserv::Client::_check_for_read(char const *str)
 {
 	return (access(str, R_OK) != -1);
+}
+
+bool		webserv::Client::_handle_redirection(void)
+{
+	std::map<std::string, std::string>::iterator	it;
+	std::string										path;
+
+	path = this->req.get_header_obj().path;
+	it = this->req.config.redirection.find(path);
+	if (it != this->req.config.redirection.end())
+	{
+		this->res.set_one_shot(true);
+		this->res.set_header("Location", it->second);
+		this->res.set_status(MOVED_PERMANENTLY);
+		return (true);
+	}
+	return (false);
 }
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)
