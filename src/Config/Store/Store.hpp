@@ -44,6 +44,8 @@ class Store
 	/************************ MEMBER FUNCTIONS ************************/
 	void	print() const;
 	void	clear();
+	bool	check();
+	bool	error(std::string error);
 	void	attach_location(webserv::Store const &rhs);
 
 	/************************ OPERATOR OVERLOAD ************************/

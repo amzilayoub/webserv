@@ -11,6 +11,7 @@
 
 # include "./Store.hpp"
 # include <iostream>
+# include "../../Logger/Logger.hpp"
 
 /************************ CONSTRUCOTRS ************************/
 webserv::Store::Store()
@@ -44,7 +45,7 @@ void	webserv::Store::attach_location(webserv::Store const &rhs)
 
 void	webserv::Store::clear()
 {
-	this->host = "0.0.0.0";
+	this->host.clear();
 	this->port = 80;
 	this->root.clear();
 	this->server_name.clear();
@@ -58,6 +59,40 @@ void	webserv::Store::clear()
 	this->location.clear();
 	this->location_object.clear();
 	this->is_autoindex_set = false;
+}
+
+bool	webserv::Store::check()
+{
+	std::list<Store>::iterator it;
+
+	if (this->host.empty())
+		return (this->error("Host cannot be empty"));
+	else if (this->root.empty())
+		return (this->error("root cannot be empty"));
+	else if (this->allow_methods.empty())
+		return (this->error("allow_methods cannot be empty"));
+
+	it = this->location_object.begin();
+	for (; it != this->location_object.end(); it++)
+	{
+		if (!it->host.empty())
+			return (this->error("Cannot add host inside the location"));
+		else if (!it->upload_path.empty())
+			return (this->error("Cannot add upload_path inside the location"));
+		else if (!it->error_page.empty())
+			return (this->error("Cannot add error_page inside the location"));
+		else if (!it->redirection.empty())
+			return (this->error("Cannot add redirection inside the location"));
+		else if (!it->location_object.empty())
+			return (this->error("Cannot add location_object inside the location"));
+	}
+	return (true);
+}
+
+bool	webserv::Store::error(std::string error)
+{
+	webserv::Logger::warning(error);
+	return (false);
 }
 
 void	webserv::Store::print() const

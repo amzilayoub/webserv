@@ -26,6 +26,8 @@ void	webserv::Config::parse(std::string const &path)
 
 	while(parser.parse(store))
 	{
+		if (!store.check())
+			exit(1);
 		this->config.push_back(store);
 		store.clear();
 	}
