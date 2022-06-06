@@ -25,6 +25,7 @@ webserv::CharacterReader::CharacterReader(std::string const &str) : _filename(st
 	*/
 	while (std::getline(this->_ifs, buf))
 		this->_raw_input += buf + '\n';
+	this->_ifs.close();
 }
 
 webserv::CharacterReader::~CharacterReader()

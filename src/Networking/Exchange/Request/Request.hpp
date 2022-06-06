@@ -29,6 +29,7 @@ class Request
 	public:
 		webserv::Store	config;
 		size_t			content_length;
+		std::string		html_path;
 
 	private:
 		webserv::Header _header;
@@ -48,6 +49,7 @@ class Request
 	public:
 		bool parse(std::string &str, int len);
 		void clear(void);
+		void handle_location(void);
 		bool is_done(void);
 
 	/************************ GETTERS/SETTERS ************************/

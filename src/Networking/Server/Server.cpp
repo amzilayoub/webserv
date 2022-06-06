@@ -113,6 +113,9 @@ void	webserv::Server::_lunch_worker()
 			// std::cout << "RET = " << ret << std::endl;
 			if (ret == __REQUEST_ERROR__ || ret == __REQUEST_DONE__)
 				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD);
+			else if (ret == __REMOVE_CLIENT__)
+				this->clients.erase(fd);
+
 		}
 		else if (this->kq.is_write_available(i))
 		{
@@ -120,7 +123,9 @@ void	webserv::Server::_lunch_worker()
 
 			webserv::Logger::info("Sending response !");
 			ret = this->clients[fd].handle_response();
-			if (ret == __REMOVE_CLIENT__ || ret == __RESPONSE_DONE__)
+			if (ret == __REMOVE_CLIENT__)
+				this->clients.erase(fd);
+			if (ret == __RESPONSE_DONE__)
 				this->kq.create_event(fd, EVFILT_WRITE, EV_DELETE);
 		}
 	}

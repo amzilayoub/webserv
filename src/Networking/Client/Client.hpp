@@ -97,6 +97,7 @@ class Client
 		int			_post(void);
 		int			_get(void);
 		int			_delete(void);
+		void		_url_decode();
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
 	public:

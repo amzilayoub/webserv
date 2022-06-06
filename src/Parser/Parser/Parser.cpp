@@ -227,6 +227,7 @@ bool webserv::Parser::_autoindex_token(webserv::Store &store)
 	std::string	value;
 
 	value = this->_lexer->nextToken();
+	store.is_autoindex_set = true;
 	if (this->_exec_regex(value, __REGEX__STRING__))
 	{
 		if (value == "on" || value == "off")

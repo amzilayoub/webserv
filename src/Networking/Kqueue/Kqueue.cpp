@@ -35,7 +35,7 @@ void	webserv::Kqueue::add_event(void)
 	int ret;
 
 	ret = kevent(this->_kq, &this->_ev_set, 1, NULL, 0, NULL);
-	this->test_error(ret, "Kqueue/add_even functions");
+	this->test_error(ret, "Kqueue/add_event functions");
 }
 
 int		webserv::Kqueue::get_event(void)

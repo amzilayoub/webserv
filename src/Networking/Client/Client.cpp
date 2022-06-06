@@ -47,6 +47,7 @@ int	webserv::Client::handle_request()
 	if ((len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0)) == 0) {
 		webserv::Logger::warning("Client disconnected...");
 		close(this->_fd);
+		return (__REMOVE_CLIENT__);
 	}
 	else if (len > 0)
 	{
@@ -66,6 +67,7 @@ int	webserv::Client::handle_request()
 	// std::cout << std::string(buf, len) << std::endl;
 	if (this->req.is_done())
 	{
+		this->_url_decode();
 		this->match_config();
 		// std::cout << "REQ DONE" << std::endl;
 		this->_content_length = 0;
@@ -103,6 +105,7 @@ void		webserv::Client::match_config()
 	std::map<std::string, webserv::Store>::iterator	it;
 	std::list<webserv::Store>::iterator				it_poss_serv;
 	webserv::Response::hr_iterator					it_header;
+	webserv::Store									default_serv;
 	
 	it = this->_servers_list.begin();
 	/*
@@ -116,7 +119,7 @@ void		webserv::Client::match_config()
 		if ((it->first.find(key) != std::string::npos) && it->second.port == this->_port)
 			possible_servers.push_back(it->second);
 	}
-	
+	default_serv = possible_servers.front();
 	/*
 	** Then filter them by host
 	*/
@@ -163,10 +166,11 @@ void		webserv::Client::match_config()
 
 		}
 	}
-	std::cout << "================ MATCHED SERVER ==============" << std::endl;
-	possible_servers.front().print();
-	std::cout << "================ MATCHED SERVER ==============" << std::endl;
-	this->req.set_config(possible_servers.front());
+	if (possible_servers.size() == 0)
+		this->req.set_config(webserv::Store(default_serv));
+	else
+		this->req.set_config(webserv::Store(possible_servers.front()));
+	this->req.handle_location();
 }
 
 
@@ -395,7 +399,10 @@ int	webserv::Client::_get_dir_html_tree()
 	struct dirent	*ent;
 
 	page = DIR_LISTING_START;
-	webserv::replace(page, "${title}", this->req.get_header_obj().path);
+	if (!this->req.html_path.empty())
+		webserv::replace(page, "${title}", this->req.html_path);
+	else
+		webserv::replace(page, "${title}", this->req.get_header_obj().path);
 	if ((dir = opendir(this->_full_path.c_str())) != NULL)
 	{
 		while ((ent = readdir(dir)) != NULL)
@@ -416,17 +423,22 @@ int	webserv::Client::_get_dir_html_tree()
 				strftime(date, 100, "%Y-%m-%d %H:%M:%S", localtime(&(attr.st_mtime)));
 				if (std::string(ent->d_name) == "..")
 				{
-					std::string						path = this->req.get_header_obj().path;
-					std::string::reverse_iterator	it = path.rbegin();
+					std::string						path;
+					std::string::reverse_iterator	it;
 					std::string						current_dir;
 				
-					for (; it != path.rend(); it++)
+					if (!this->req.html_path.empty())
+						path = this->req.html_path;
+					else
+						path = this->req.get_header_obj().path;
+
+					for (it = path.rbegin(); it != path.rend(); it++)
 					{
 						if ((*it) == '/' && !current_dir.empty())
 							break ;
 						current_dir = (*it) + current_dir;
 					}
-					webserv::replace(path, current_dir, "");
+					webserv::replace_last(path, current_dir, "");
 					name = "../";
 					link = path;
 				}
@@ -437,6 +449,7 @@ int	webserv::Client::_get_dir_html_tree()
 				page += row;
 			}
 		}
+		closedir(dir);
 	}
 	else
 	{
@@ -509,6 +522,7 @@ bool	webserv::Client::check_allowed_methods()
 
 bool	webserv::Client::check_resources_exists()
 {
+	std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
 	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);
@@ -541,6 +555,26 @@ bool	webserv::Client::check_supported_media_type()
 		return (false);
 	}
 	return (true);
+}
+
+void		webserv::Client::_url_decode()
+{
+	std::map<std::string, int>::iterator	it;
+	std::string								token;
+	size_t									index;
+
+	while ((index = this->req.get_header_obj().path.find("%")) != std::string::npos)
+	{
+		token = this->req.get_header_obj().path.substr(index, 3);
+
+		it = this->config.url_encoding.find(token);
+		if (it == this->config.url_encoding.end())
+			webserv::Logger::error("This type of encoding is not supported");
+		webserv::replace(
+				this->req.get_header_obj().path,
+				token,
+				std::string(1, static_cast<char>(it->second)));
+	}
 }
 
 bool		webserv::Client::_file_exists(char const *str)

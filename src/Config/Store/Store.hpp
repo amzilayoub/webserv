@@ -29,6 +29,7 @@ class Store
 		std::list<std::string>				index;
 		std::map<int, std::string>			error_page;
 		bool								autoindex;
+		bool								is_autoindex_set;
 		unsigned int						client_max_body_size;
 		std::map<std::string, std::string>	redirection;
 		std::string							location;
@@ -43,6 +44,7 @@ class Store
 	/************************ MEMBER FUNCTIONS ************************/
 	void	print() const;
 	void	clear();
+	void	attach_location(webserv::Store const &rhs);
 
 	/************************ OPERATOR OVERLOAD ************************/
 	webserv::Store &operator=(webserv::Store const &rhs);

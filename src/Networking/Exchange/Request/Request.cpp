@@ -10,6 +10,8 @@
 # include "./Request.hpp"
 # include <regex>
 # include <iostream>
+# include <list>
+# include "../../../Utils/Utils.hpp"
 
 /************************ MEMBER ATTRIBUTES ************************/
 webserv::Request::Request()
@@ -53,6 +55,56 @@ void webserv::Request::clear()
 	this->_has_error = false;
 	this->_request_length = 0;
 	this->content_length = 0;
+	this->html_path.clear();
+}
+
+void	webserv::Request::handle_location(void)
+{
+	std::list<Store>::iterator	it;
+	webserv::Store				target;
+	std::string					target_location;
+	std::string					location;
+	std::string					path;
+	int							longest_macth;
+
+	it = this->config.location_object.begin();
+	longest_macth = 0;
+	if (!this->_header.path.empty())
+		while (webserv::replace(this->_header.path, "//", "/"));
+	/*
+	** assuming it's a directory
+	*/
+	path = this->_header.path + "/";
+	for (; it != this->config.location_object.end(); it++)
+	{
+		location = it->location;
+		if (location.back() != '/')
+			location += "/";
+		if (path.find(location) != std::string::npos)
+		{
+			/*
+			** Checking if empty because in the previous check we did remove '/'
+			** from the end of the location
+			*/
+			if (longest_macth > location.length() && !location.empty())
+				continue ;
+			// std::cout << location << std::endl;
+			longest_macth = location.length();
+			target = (*it);
+			target_location = location;
+		}
+	}
+	if (longest_macth)
+	{
+		this->html_path = this->_header.path;
+		if (target_location.back() == '/')
+			target_location.pop_back();
+		webserv::replace(this->_header.path, target_location, "");
+		this->config.attach_location(target);
+		std::cout << "this->_header.path = " << this->_header.path << std::endl;
+		std::cout << "target.root = " << target.root << std::endl;
+		// std::cout << longest_macth << "|" << target.location << std::endl;
+	}
 }
 
 bool	webserv::Request::is_done(void)

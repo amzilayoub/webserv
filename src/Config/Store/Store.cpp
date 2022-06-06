@@ -30,6 +30,18 @@ webserv::Store::~Store()
 }
 
 /************************ MEMBER FUNCTIONS************************/
+void	webserv::Store::attach_location(webserv::Store const &rhs)
+{
+	this->root = (rhs.root.empty() ? this->root : rhs.root);
+	this->allow_methods = (rhs.allow_methods.empty() ? this->allow_methods : rhs.allow_methods);
+	this->upload_path = (rhs.upload_path.empty() ? this->upload_path : rhs.upload_path);
+	this->index = (rhs.index.empty() ? this->index : rhs.index);
+	this->error_page = (rhs.error_page.empty() ? this->error_page : rhs.error_page);
+	this->autoindex = (rhs.is_autoindex_set ? rhs.autoindex : this->autoindex);
+	this->client_max_body_size = (rhs.client_max_body_size == -1 ? this->client_max_body_size : rhs.client_max_body_size);
+	this->redirection = (rhs.redirection.empty() ? this->redirection : rhs.redirection);
+}
+
 void	webserv::Store::clear()
 {
 	this->host = "0.0.0.0";
@@ -41,9 +53,11 @@ void	webserv::Store::clear()
 	this->index.clear();
 	this->error_page.clear();
 	this->autoindex = false;
+	this->client_max_body_size = -1;
 	this->redirection.clear();
 	this->location.clear();
 	this->location_object.clear();
+	this->is_autoindex_set = false;
 }
 
 void	webserv::Store::print() const
@@ -53,7 +67,6 @@ void	webserv::Store::print() const
 	std::cout << "root: " << this->root << std::endl;
 	std::cout << "server_name: " << this->server_name << std::endl;
 	
-	return ;
 	std::cout << "allow_methods: " << std::endl;
 	std::list<std::string>::const_iterator allow_methods_it = this->allow_methods.begin();
 	for (; allow_methods_it != this->allow_methods.end(); ++allow_methods_it)
@@ -102,6 +115,7 @@ webserv::Store &webserv::Store::operator=(webserv::Store const &rhs)
 	this->redirection = rhs.redirection;
 	this->location = rhs.location;
 	this->location_object = rhs.location_object;
+	this->is_autoindex_set = rhs.is_autoindex_set;
 
 	return (*this);
 }

@@ -24,6 +24,7 @@ class	Config
 	public:
 		std::list<Store> config;
 		std::map<std::string, std::string> mime_types;
+		std::map<std::string, int> url_encoding;
 
 	/************************ CONSTRUCOTRS ************************/
 	public:
@@ -33,6 +34,7 @@ class	Config
 	public:
 		void		parse(std::string const &path);
 		void		get_mime_types_list(void);
+		void		get_url_encoding(void);
 		std::string	get_file_extension(std::string &content_type);
 };
 

@@ -111,7 +111,8 @@ void webserv::Response::clear()
 	this->_status_string.clear();
 	this->_response.clear();
 	this->_has_error = false;
-	this->_file.close();
+	if (this->_file.is_open())
+		this->_file.close();
 	this->_start_chunked = false;
 	this->_is_done = true;
 	this->_one_shot = false;

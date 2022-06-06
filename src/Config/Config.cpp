@@ -14,6 +14,7 @@
 webserv::Config::Config(void)
 {
 	this->get_mime_types_list();
+	this->get_url_encoding();
 }
 
 void	webserv::Config::parse(std::string const &path)
@@ -36,6 +37,24 @@ void	webserv::Config::parse(std::string const &path)
 	// }
 }
 
+void	webserv::Config::get_url_encoding()
+{
+	std::ifstream	fs;
+	std::string		line;
+
+	fs.open("./src/ConfigFiles/UrlEncoding.txt");
+	if (!fs.is_open())
+		webserv::Logger::error("Cannot open UrlEncoding.txt file");
+	while (std::getline(fs, line))
+	{
+		std::list<std::string> *words = webserv::split(line, " ");
+
+		this->url_encoding[words->back()] = std::stoi(words->front());
+		delete words;
+	}
+	fs.close();
+}
+
 void	webserv::Config::get_mime_types_list()
 {
 	std::ifstream	fs;
@@ -53,6 +72,7 @@ void	webserv::Config::get_mime_types_list()
 	}
 	this->mime_types["default_type"] = "text/plain";
 	this->mime_types["default_extension"] = ".txt";
+	fs.close();
 }
 
 std::string	webserv::Config::get_file_extension(std::string &content_type)
