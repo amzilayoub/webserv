@@ -184,3 +184,8 @@ void		webserv::Response::set_one_shot(bool value)
 {
 	this->_one_shot = value;
 }
+
+void	webserv::Response::set_config(webserv::Store config)
+{
+	this->config = config;
+}

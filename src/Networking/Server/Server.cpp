@@ -100,6 +100,7 @@ void	webserv::Server::_lunch_worker()
 				}
 				this->clients[clientfd].set_fd(clientfd);
 				this->clients[clientfd].req.set_config(this->config.config.front());
+				this->clients[clientfd].res.set_config(this->config.config.front());
 				this->clients[clientfd].set_config(this->config, this->virt_serv_config);
 				continue ;
 			}

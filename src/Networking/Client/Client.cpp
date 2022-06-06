@@ -69,7 +69,6 @@ int	webserv::Client::handle_request()
 	{
 		this->_url_decode();
 		this->match_config();
-		// std::cout << "REQ DONE" << std::endl;
 		this->_content_length = 0;
 		this->res.set_header("Host", this->req.config.host + ":" + std::to_string(this->req.config.port));
 		this->res.set_header("Server", this->req.config.server_name);
@@ -167,9 +166,16 @@ void		webserv::Client::match_config()
 		}
 	}
 	if (possible_servers.size() == 0)
+	{
 		this->req.set_config(webserv::Store(default_serv));
+		this->res.set_config(webserv::Store(default_serv));
+
+	}
 	else
+	{
 		this->req.set_config(webserv::Store(possible_servers.front()));
+		this->res.set_config(webserv::Store(possible_servers.front()));
+	}
 	this->req.handle_location();
 }
 
@@ -522,7 +528,7 @@ bool	webserv::Client::check_allowed_methods()
 
 bool	webserv::Client::check_resources_exists()
 {
-	std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
+	// std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
 	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);

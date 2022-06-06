@@ -14,6 +14,7 @@
 #  include <string>
 #  include "../Header/Header.hpp"
 #  include <fstream>
+#  include "../../../Config/Store/Store.hpp"
 
 #  define __CHUNK_TO_READ__ 1024
 namespace webserv
@@ -27,8 +28,9 @@ class Response
 
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		std::map<int, std::string> status_code_list;
-		std::map<int, std::string> error_pages;
+		std::map<int, std::string>	status_code_list;
+		std::map<int, std::string>	error_pages;
+		webserv::Store				config;
 
 	private:
 		webserv::Header _header;
@@ -61,6 +63,7 @@ class Response
 
 	/************************ GETTERS/SETTERS ************************/
 	std::map<std::string, std::string>	&get_headers(void);
+	void								set_config(webserv::Store config);
 	std::string &get_body();
 	void		set_body(std::string str);
 	void		set_one_shot(bool value);

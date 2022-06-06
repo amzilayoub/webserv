@@ -38,6 +38,10 @@ class Request
 		bool			_has_error;
 		std::string		_header_special_char;
 		size_t			_request_length;
+
+		std::string		_transfer_encoding;
+		bool			_is_chunked;
+		int				_chunk_left_to_read;
 		
 		
 	
@@ -50,7 +54,9 @@ class Request
 		bool parse(std::string &str, int len);
 		void clear(void);
 		void handle_location(void);
+		bool handle_chunked_request(std::string &str, int len);
 		bool is_done(void);
+		int to_int(std::string str);
 
 	/************************ GETTERS/SETTERS ************************/
 	void								set_config(webserv::Store config);
