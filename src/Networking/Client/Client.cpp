@@ -405,12 +405,16 @@ int	webserv::Client::_get_dir_html_tree()
 	std::string		row;
 	DIR				*dir;
 	struct dirent	*ent;
+	std::string		used_html_path;
 
 	page = DIR_LISTING_START;
 	if (!this->req.html_path.empty())
-		webserv::replace(page, "${title}", this->req.html_path);
+		used_html_path = this->req.html_path;
 	else
-		webserv::replace(page, "${title}", this->req.get_header_obj().path);
+		used_html_path = this->req.get_header_obj().path;
+
+	webserv::replace(page, "${title}", used_html_path);
+	webserv::replace(page, "${title}", used_html_path);
 	if ((dir = opendir(this->_full_path.c_str())) != NULL)
 	{
 		while ((ent = readdir(dir)) != NULL)
@@ -427,7 +431,7 @@ int	webserv::Client::_get_dir_html_tree()
 
 				row = DIR_LISTING_ROW;
 				name = std::string(ent->d_name) + (S_ISDIR(attr.st_mode) ? "/" : "");
-				link = name;
+				link = used_html_path + this->_add_slash(used_html_path) + name;
 				strftime(date, 100, "%Y-%m-%d %H:%M:%S", localtime(&(attr.st_mtime)));
 				if (std::string(ent->d_name) == "..")
 				{
@@ -435,11 +439,7 @@ int	webserv::Client::_get_dir_html_tree()
 					std::string::reverse_iterator	it;
 					std::string						current_dir;
 				
-					if (!this->req.html_path.empty())
-						path = this->req.html_path;
-					else
-						path = this->req.get_header_obj().path;
-
+					path = used_html_path;
 					for (it = path.rbegin(); it != path.rend(); it++)
 					{
 						if ((*it) == '/' && !current_dir.empty())
@@ -610,6 +610,13 @@ bool		webserv::Client::_handle_redirection(void)
 		return (true);
 	}
 	return (false);
+}
+
+std::string		webserv::Client::_add_slash(std::string const &str)
+{
+	if (str.back() == '/')
+		return ("");
+	return ("/");
 }
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)

@@ -29,7 +29,7 @@
 #  define DIR_LISTING_START "<!DOCTYPE html>\
 								<html>\
 								<head>\
-									<title>auto index</title>\
+									<title>${title}</title>\
 								</head>\
 								<body>\
 									<h1>Index of ${title}</h1>\
@@ -99,6 +99,7 @@ class Client
 		int			_delete(void);
 		void		_url_decode();
 		bool		_handle_redirection();
+		std::string	_add_slash(std::string const &str);
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
 	public:
