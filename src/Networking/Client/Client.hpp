@@ -68,6 +68,7 @@ class Client
 		int										_port;
 		struct sockaddr_in						_sin;
 		std::map<std::string, webserv::Store>	_servers_list;
+		std::string								_cgi_file;
 
 	public:
 		webserv::Request	req;
@@ -102,7 +103,8 @@ class Client
 		int			_delete(void);
 		void		_url_decode();
 		bool		_handle_redirection();
-		int			_get_index_file();
+		int			_get_path_type();
+		std::string _get_index_file(std::string extension = "");
 		std::string	_add_slash(std::string const &str);
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
@@ -111,7 +113,7 @@ class Client
 		bool		check_resources_exists(void);
 		bool		check_entity_length(void);
 		bool		check_supported_media_type(void);
-		bool		check_for_cgi();
+		int			check_for_cgi();
 		int			handle_cgi();
 		int			execute_cgi(int fd);
 

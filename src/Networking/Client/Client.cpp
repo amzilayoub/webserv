@@ -201,37 +201,20 @@ int		webserv::Client::_post()
 
 int		webserv::Client::_get()
 {
-	struct stat s;
+	int	type;
 
 	webserv::Logger::info(std::string("GET: ") + this->req.get_header_obj().path);
+	type = this->_get_path_type();
 
-	if (lstat(this->_full_path.c_str(), &s) == 0)
+	if (type == __PATH_IS_DIR__)
+		return (this->_handle_folder());
+	else if (type == __PATH_IS_FILE__)
 	{
-		/*
-		** if directory
-		*/
-		if (!this->_check_for_read(this->_full_path.c_str()))
-		{
-			this->res.error(FORBIDDEN);
-			return (__REQUEST_ERROR__);
-		}
-		else if (S_ISDIR(s.st_mode))
-			return (this->_handle_folder());
-		/*
-		** if file
-		*/
-		else if (S_ISREG(s.st_mode))
-		{
-			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
-			this->res.set_status(OK);
-			return (__REQUEST_DONE__);
-		}
-	} else
-	{
-		this->res.error(INTERNAL_SERVER_ERROR);
-		return (__REQUEST_ERROR__);
+		this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
+		this->res.set_status(OK);
+		return (__REQUEST_DONE__);
 	}
-	return (__REQUEST_DONE__);
+	return (type);
 }
 
 int		webserv::Client::_delete()
@@ -313,22 +296,14 @@ int		webserv::Client::_delete_folder()
 
 int		webserv::Client::_handle_folder(void)
 {
-	std::string							path = this->_full_path;
-	std::list<std::string>::iterator	it = this->req.config.index.begin();
+	std::string index_file = this->_get_index_file();
 
-	if (path.back() != '/')
-		path += "/";
-	for (; it != this->req.config.index.end(); it++)
+	std::cout << "index_file = " << index_file << std::endl;
+	if (index_file != "")
 	{
-		std::string filepath = path + (*it);
-		if (this->_file_exists(filepath.c_str()))
-		{
-			if (!this->_check_for_read(filepath.c_str()))
-				continue ;
-			this->res.set_file(filepath, this->get_file_type(filepath));
-			this->res.set_status(OK);
-			return (__REQUEST_DONE__);
-		}
+		this->res.set_file(index_file, this->get_file_type(index_file));
+		this->res.set_status(OK);
+		return (__REQUEST_DONE__);
 	}
 	if (!this->req.config.autoindex)
 	{
@@ -622,24 +597,40 @@ std::string		webserv::Client::_add_slash(std::string const &str)
 	return ("/");
 }
 
-bool		webserv::Client::check_for_cgi(void)
+int		webserv::Client::check_for_cgi(void)
 {
+	int type;
+
 	if (this->req.config.cgi.extension.empty())
 		return (false);
-	return (webserv::ends_with(this->req.get_header_obj().path, this->req.config.cgi.extension));
+	type = this->_get_path_type();
+	if (type == __PATH_IS_DIR__)
+	{
+		this->_cgi_file = this->_get_index_file(this->req.config.cgi.extension);
+		if (this->_cgi_file == "")
+			return (false);
+		return (true);
+	}
+	else if (type == __PATH_IS_FILE__)
+	{
+		this->_cgi_file = this->_full_path;
+		if (webserv::ends_with(this->req.get_header_obj().path, this->req.config.cgi.extension))
+			return (true);
+	}
+	return (false);
 }
 
 int		webserv::Client::handle_cgi(void)
 {
 	int fd;
 
-	if (!this->_check_for_read(this->_file_name.c_str()))
+	if (!this->_check_for_read(this->_cgi_file.c_str()))
 	{
 		this->res.set_one_shot(true);
 		this->res.error(FORBIDDEN);
 		return (__REQUEST_ERROR__);
 	}
-	fd = open(this->_file_name.c_str(), O_RDONLY);
+	fd = open(this->_cgi_file.c_str(), O_RDONLY);
 	if (fd < 0)
 	{
 		this->res.set_one_shot(true);
@@ -667,7 +658,7 @@ int		webserv::Client::execute_cgi(int fd)
 
 		arg = (char**)malloc(sizeof(char*) * 3);
 		arg[0] = "/usr/bin/php";
-		arg[1] = const_cast<char*>(this->_full_path.c_str());
+		arg[1] = const_cast<char*>(this->_cgi_file.c_str());
 		arg[2] = NULL;
 		dup2(fd, 0);
 		execve(arg[0], arg, NULL);
@@ -680,7 +671,29 @@ int		webserv::Client::execute_cgi(int fd)
 	return (0);
 }
 
-int	webserv::Client::_get_index_file()
+std::string	webserv::Client::_get_index_file(std::string extension)
+{
+	std::string							path = this->_full_path;
+	std::list<std::string>::iterator	it = this->req.config.index.begin();
+
+	if (path.back() != '/')
+		path += "/";
+	for (; it != this->req.config.index.end(); it++)
+	{
+		std::string filepath = path + (*it);
+		if (this->_file_exists(filepath.c_str()))
+		{
+			if (this->_check_for_read(filepath.c_str()))
+			{
+				if (extension == "" || webserv::ends_with((*it), extension))
+					return (filepath);
+			}
+		}
+	}
+	return ("");
+}
+
+int	webserv::Client::_get_path_type()
 {
 	struct stat s;
 
@@ -695,22 +708,15 @@ int	webserv::Client::_get_index_file()
 			return (__REQUEST_ERROR__);
 		}
 		else if (S_ISDIR(s.st_mode))
-			return (this->_handle_folder());
+			return (__PATH_IS_DIR__);
 		/*
 		** if file
 		*/
 		else if (S_ISREG(s.st_mode))
-		{
-			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
-			this->res.set_status(OK);
-			return (__REQUEST_DONE__);
-		}
-	} else
-	{
-		this->res.error(INTERNAL_SERVER_ERROR);
-		return (__REQUEST_ERROR__);
+			return (__PATH_IS_FILE__);
 	}
-	return (__REQUEST_DONE__);
+	this->res.error(INTERNAL_SERVER_ERROR);
+	return (__REQUEST_ERROR__);
 }
 
 /************************ GETTERS/SETTERS ************************/
