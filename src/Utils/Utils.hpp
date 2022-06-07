@@ -19,7 +19,7 @@ namespace webserv
 	std::string				&str_to_lower(std::string &str);
 	bool					replace(std::string &str, std::string const target, std::string const to_replace);
 	bool					replace_last(std::string &str, std::string const target, std::string const to_replace);
-
+	bool					ends_with(std::string const & value, std::string const & ending);
 }
 
 int	unlink_file(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf);

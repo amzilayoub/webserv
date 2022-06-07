@@ -16,6 +16,14 @@
 
 namespace webserv
 {
+typedef struct	s_cgi
+{
+	std::string				extension;
+	std::string				path;
+	std::list<std::string>	allow_methods;
+
+}				t_cgi;
+
 class Store
 {
 	/************************ MEMBER ATTRIBUTES ************************/
@@ -32,6 +40,7 @@ class Store
 		bool								is_autoindex_set;
 		unsigned int						client_max_body_size;
 		std::map<std::string, std::string>	redirection;
+		t_cgi								cgi;
 		std::string							location;
 		std::list<Store>					location_object;
 

@@ -16,9 +16,11 @@
 
 #  define __ANY__ ""
 #  define __REGEX_ALPHA_NUM__ "^[a-zA-Z0-9_]*$"
+#  define __REGEX_EXTENSION__ "^.[a-zA-Z0-9_]*$"
 #  define __REGEX__STRING__ "[a-zA-Z]+"
 #  define __REGEX_INTEGER__ "[0-9]+"
-#  define __REGEX_IP__ "(\\d{1,3}(\\.\\d{1,3}){3})"
+#  define __REGEX_IP__ "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+#  define __REGEX_HOSTNAME__ "^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$"
 #  define __REGEX_URI__ "^/|(/[\\w-]+)+$"
 
 #  include <map>
@@ -73,6 +75,7 @@ class Parser
 		bool _autoindex_token(webserv::Store &store);
 		bool _client_max_body_size_token(webserv::Store &store);
 		bool _redirection_token(webserv::Store &store);
+		bool _cgi_token(webserv::Store &store);
 		bool _location_token(webserv::Store &store);
 		bool _right_bracket_token(webserv::Store &store);
 

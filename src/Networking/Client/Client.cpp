@@ -20,7 +20,7 @@
 # define _POSIX_C_SOURCE
 # include <stdio.h>
 # include <ftw.h>
-
+# include <fcntl.h>
 
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
@@ -90,6 +90,11 @@ int	webserv::Client::handle_request()
 		if (!this->check_supported_media_type())
 			return (__REQUEST_ERROR__);
 		this->_save_file("/tmp");
+		if (this->check_for_cgi())
+		{
+			if (this->handle_cgi())
+				return (__REQUEST_DONE__);
+		}
 		if (this->req.get_header_obj().method == "post")
 			return (this->_post());
 		else if (this->req.get_header_obj().method == "get")
@@ -226,8 +231,6 @@ int		webserv::Client::_get()
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
-	// if (this->req.config.autoindex)
-
 	return (__REQUEST_DONE__);
 }
 
@@ -345,8 +348,8 @@ bool	webserv::Client::_save_file(std::string path_to_upload)
 
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
 
-	this->_file_name = filename + extension;
-	myfile.open(path_to_upload + "/" + this->_file_name, std::ios::binary | std::ios::out);
+	this->_file_name = path_to_upload + "/" + filename + extension;
+	myfile.open(this->_file_name, std::ios::binary | std::ios::out);
 	if(!myfile.is_open())
 	{
 		this->res.error(INTERNAL_SERVER_ERROR);
@@ -530,7 +533,7 @@ bool	webserv::Client::check_allowed_methods()
 
 bool	webserv::Client::check_resources_exists()
 {
-	std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
+	// std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
 	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);
@@ -618,6 +621,98 @@ std::string		webserv::Client::_add_slash(std::string const &str)
 		return ("");
 	return ("/");
 }
+
+bool		webserv::Client::check_for_cgi(void)
+{
+	if (this->req.config.cgi.extension.empty())
+		return (false);
+	return (webserv::ends_with(this->req.get_header_obj().path, this->req.config.cgi.extension));
+}
+
+int		webserv::Client::handle_cgi(void)
+{
+	int fd;
+
+	if (!this->_check_for_read(this->_file_name.c_str()))
+	{
+		this->res.set_one_shot(true);
+		this->res.error(FORBIDDEN);
+		return (__REQUEST_ERROR__);
+	}
+	fd = open(this->_file_name.c_str(), O_RDONLY);
+	if (fd < 0)
+	{
+		this->res.set_one_shot(true);
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	return (this->execute_cgi(fd));
+}
+
+int		webserv::Client::execute_cgi(int fd)
+{
+	pid_t	pid;
+	int		status;
+
+	pid = fork();
+	if (pid < 0)
+	{
+		this->res.set_one_shot(true);
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	else if (pid == 0)
+	{
+		char **arg;
+
+		arg = (char**)malloc(sizeof(char*) * 3);
+		arg[0] = "/usr/bin/php";
+		arg[1] = const_cast<char*>(this->_full_path.c_str());
+		arg[2] = NULL;
+		dup2(fd, 0);
+		execve(arg[0], arg, NULL);
+		exit(0);
+	}
+	else
+	{
+		waitpid(pid, &status, 0);
+	}
+	return (0);
+}
+
+int	webserv::Client::_get_index_file()
+{
+	struct stat s;
+
+	if (lstat(this->_full_path.c_str(), &s) == 0)
+	{
+		/*
+		** if directory
+		*/
+		if (!this->_check_for_read(this->_full_path.c_str()))
+		{
+			this->res.error(FORBIDDEN);
+			return (__REQUEST_ERROR__);
+		}
+		else if (S_ISDIR(s.st_mode))
+			return (this->_handle_folder());
+		/*
+		** if file
+		*/
+		else if (S_ISREG(s.st_mode))
+		{
+			this->res.set_file(this->_full_path, this->get_file_type(this->_full_path));
+			this->res.set_status(OK);
+			return (__REQUEST_DONE__);
+		}
+	} else
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	return (__REQUEST_DONE__);
+}
+
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)
 {

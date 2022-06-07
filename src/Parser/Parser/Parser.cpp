@@ -29,6 +29,7 @@ webserv::Parser::Parser(webserv::CharacterReader &cr)
 	this->_token_analyser["client_max_body_size"] = &Parser::_client_max_body_size_token;
 	this->_token_analyser["redirection"] = &Parser::_redirection_token;
 	this->_token_analyser["location"] = &Parser::_location_token;
+	this->_token_analyser["cgi"] = &Parser::_cgi_token;
 	this->_token_analyser[__RIGHT_BRACKETS__] = &Parser::_right_bracket_token;
 
 }
@@ -123,7 +124,7 @@ bool webserv::Parser::_listen_token(webserv::Store &store)
 	bool		isValid;
 
 	token = this->_lexer->nextToken();
-	isValid = this->_exec_regex(token, __REGEX_ALPHA_NUM__) || this->_exec_regex(token, __REGEX_IP__);
+	isValid = this->_exec_regex(token, __REGEX_HOSTNAME__) || this->_exec_regex(token, __REGEX_IP__);
 	if (isValid)
 	{
 		store.host = token;
@@ -262,6 +263,21 @@ bool webserv::Parser::_redirection_token(webserv::Store &store)
 		return (false);
 	value = this->_lexer->nextToken();
 	store.redirection[key] = value;
+	return (true);
+}
+
+bool webserv::Parser::_cgi_token(webserv::Store &store)
+{
+	std::string	value;
+
+	value = this->_lexer->nextToken();
+	if (value.front() != '.')
+		return (false);
+	store.cgi.extension = value;
+	value = this->_lexer->join();
+	if (value == __SEMI_COLON__)
+		return (false);
+	store.cgi.path = value;
 	return (true);
 }
 

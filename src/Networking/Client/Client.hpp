@@ -23,6 +23,9 @@
 #  define __RESPONSE_IN_PROGRESS__ __REQUEST_IN_PROGRESS__
 #  define __REMOVE_CLIENT__ 3
 
+#  define __PATH_IS_DIR__ 1
+#  define __PATH_IS_FILE__ 2
+
 #  define __MB_IN_BYTE__ 1048576
 #  define __BYTE_TO_READ__ 1024
 
@@ -99,6 +102,7 @@ class Client
 		int			_delete(void);
 		void		_url_decode();
 		bool		_handle_redirection();
+		int			_get_index_file();
 		std::string	_add_slash(std::string const &str);
 
 	/************************ MEMBER FUNCTIONS(ERROR HANDLING) ************************/
@@ -107,6 +111,9 @@ class Client
 		bool		check_resources_exists(void);
 		bool		check_entity_length(void);
 		bool		check_supported_media_type(void);
+		bool		check_for_cgi();
+		int			handle_cgi();
+		int			execute_cgi(int fd);
 
 	/************************ GETTERS/SETTERS ************************/
 	public:

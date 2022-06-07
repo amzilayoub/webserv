@@ -16,6 +16,7 @@ SRC = main.cpp 											\
 	./src/Utils/unlink_file.cpp							\
 	./src/Utils/replace.cpp								\
 	./src/Utils/replace_last.cpp						\
+	./src/Utils/ends_with.cpp							\
 	./src/Logger/Logger.cpp								\
 
 

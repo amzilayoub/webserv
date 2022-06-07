@@ -59,6 +59,8 @@ void	webserv::Store::clear()
 	this->location.clear();
 	this->location_object.clear();
 	this->is_autoindex_set = false;
+	this->cgi.extension.clear();
+	this->cgi.path.clear();
 }
 
 bool	webserv::Store::check()
@@ -71,6 +73,8 @@ bool	webserv::Store::check()
 		return (this->error("root cannot be empty"));
 	else if (this->allow_methods.empty())
 		return (this->error("allow_methods cannot be empty"));
+	else if (!this->cgi.extension.empty() && this->cgi.path.empty())
+		return (this->error("cgi path cannot be empty"));
 
 	it = this->location_object.begin();
 	for (; it != this->location_object.end(); it++)
@@ -153,6 +157,8 @@ webserv::Store &webserv::Store::operator=(webserv::Store const &rhs)
 	this->location = rhs.location;
 	this->location_object = rhs.location_object;
 	this->is_autoindex_set = rhs.is_autoindex_set;
+	this->cgi.path = rhs.cgi.path;
+	this->cgi.extension = rhs.cgi.extension;
 
 	return (*this);
 }
