@@ -640,6 +640,32 @@ int		webserv::Client::handle_cgi(void)
 	return (this->execute_cgi(fd));
 }
 
+char	**webserv::Client::prepare_cgi_env()
+{
+	char											**arg;
+	int												i;
+	std::map<std::string, std::string>::iterator	it;
+	std::string										file_without_root;
+
+	file_without_root = this->_cgi_file;
+	webserv::replace(file_without_root, this->req.config.root, "");
+	// need to change the size here later on
+	i = -1;
+	arg = (char**)malloc(sizeof(char*) * 10);
+	arg[++i] = std::string("DOCUMENT_ROOT=") + this->req.config.root;
+	arg[++i] = std::string("CONTENT_LENGTH=") + this->req.content_length;
+	
+	it = this->req.get_headers().find("content-type");
+	if (it != this->req.get_headers().end())
+		arg[++i] = std::string("CONTENT_TYPE=") + it->second;
+	arg[++i] = std::string("GATEWAY_INTERFACE=CGI/1.1");
+	arg[++i] = std::string("PATH_INFO=") + this->_cgi_file;
+	arg[++i] = std::string("PATH_TRANSLATED=") + file_without_root;
+	arg[++i] = std::string("QUERY_STRING=") + this->req.get_header_obj().query_string;
+	arg[++i] = std::string("REMOTE_ADDR=0.0.0.0");
+	arg[++i] = std::string("REQUEST_METHOD=") + webserv::str_to_upper(this->req.get_header_obj().method);
+}
+
 int		webserv::Client::execute_cgi(int fd)
 {
 	pid_t	pid;
@@ -656,10 +682,7 @@ int		webserv::Client::execute_cgi(int fd)
 	{
 		char **arg;
 
-		arg = (char**)malloc(sizeof(char*) * 3);
-		arg[0] = "/usr/bin/php";
-		arg[1] = const_cast<char*>(this->_cgi_file.c_str());
-		arg[2] = NULL;
+		arg = this->prepare_cgi_env();
 		dup2(fd, 0);
 		execve(arg[0], arg, NULL);
 		exit(0);

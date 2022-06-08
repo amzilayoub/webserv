@@ -23,6 +23,7 @@ class Header
 	public:
 		std::string							method;
 		std::string							path;
+		std::string							query_string;
 		std::string							protocol_version;
 
 	private:

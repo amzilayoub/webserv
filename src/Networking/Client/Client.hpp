@@ -115,6 +115,7 @@ class Client
 		bool		check_supported_media_type(void);
 		int			check_for_cgi();
 		int			handle_cgi();
+		char		**prepare_cgi_env();
 		int			execute_cgi(int fd);
 
 	/************************ GETTERS/SETTERS ************************/

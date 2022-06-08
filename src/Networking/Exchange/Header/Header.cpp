@@ -44,7 +44,8 @@ void	webserv::Header::_get_headers(std::string &str)
 	std::list<std::string>				*words;
 	std::list<std::string>::iterator	it;
 	std::list<std::string>::iterator	tmp_it;
-	int i;
+	size_t 								index;
+	int									i;
 
 	words = webserv::split(str, "\r\n");
 	line = webserv::split(words->front(), " ");
@@ -52,7 +53,13 @@ void	webserv::Header::_get_headers(std::string &str)
 	this->method = webserv::str_to_lower((*it));
 	this->path = *(++it);
 	this->protocol_version = *(++it);
-	
+
+	index = this->path.find("?");
+	if (index != std::string::npos)
+	{
+		this->query_string = this->path.substr(index + 1);
+		this->path.erase(index)
+	}
 	delete line;
 
 	it = words->begin();
@@ -103,7 +110,7 @@ void	webserv::Header::clear()
 	this->path.clear();
 	this->_headers.clear();
 	this->_body.clear();
-
+	this->query_string.clear();
 	this->_is_done = false;
 }
 
