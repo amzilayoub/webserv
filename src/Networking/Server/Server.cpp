@@ -117,7 +117,7 @@ void	webserv::Server::_lunch_worker()
 
 			webserv::Logger::info("Request delivered !");
 			ret = this->clients[fd].handle_request();
-			// std::cout << "RET = " << ret << std::endl;
+			std::cout << "RET = " << ret << std::endl;
 			if (ret == __REQUEST_ERROR__ || ret == __REQUEST_DONE__)
 				this->kq.create_event(fd, EVFILT_WRITE, EV_ADD);
 			else if (ret == __REMOVE_CLIENT__)

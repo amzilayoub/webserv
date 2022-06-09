@@ -53,7 +53,7 @@ int	webserv::Client::handle_request()
 	else if (len > 0)
 	{
 		std::string buffer(buf, len);
-		
+		webserv::Logger::debug(std::to_string(len));
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -62,6 +62,7 @@ int	webserv::Client::handle_request()
 	}
 	else if (len < 0)
 	{
+		webserv::Logger::debug(std::to_string(len));
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
@@ -351,7 +352,8 @@ int	webserv::Client::_open_file(std::string path_to_upload)
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
 
 	full_name = path_to_upload + "/" + filename + extension;
-	myfile = open(full_name.c_str(), O_RDWR | O_CREAT, 0666);
+	this->_cgi_output_file = full_name;
+	myfile = open(full_name.c_str(), O_WRONLY | O_CREAT, 0666);
 	if(myfile < 0)
 	{
 		this->res.error(INTERNAL_SERVER_ERROR);
@@ -708,7 +710,7 @@ char	**webserv::Client::prepare_cgi_env()
 	args_list.push_back((std::string("SERVER_PROTOCOL=HTTP/1.1")));
 
 	args_list.push_back((std::string("SCRIPT_FILENAME=") + this->_cgi_file));
-	args_list.push_back((std::string("HTTP_HOST=") + this->req.config.host));
+	args_list.push_back((std::string("HTTP_HOST=127.0.0.1:") + std::to_string(this->req.config.port)));
 	args_list.push_back((std::string("REDIRECT_STATUS=200")));
 
 	std::list<std::string>::iterator it_l = args_list.begin();
@@ -730,7 +732,7 @@ int		webserv::Client::execute_cgi(int fd)
 
 	i = -1;
 	ret = __CANNOT_EXECUTE_CGI__;
-	output = this->_open_file("/tmp");
+	output = this->_open_file("/tmp/cgi");
 	if (output < 0)
 	{
 		this->res.set_one_shot(true);
@@ -759,19 +761,19 @@ int		webserv::Client::execute_cgi(int fd)
 	else
 	{
 		waitpid(pid, &status, 0);
-		close(fd);
 		while (env[++i])
 			free(env[i]);
 		free(env);
 		free(arg);
 		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
-			ret = this->handle_cgi_response(output);
+			ret = this->handle_cgi_response();
+		close(fd);
 		close(output);
 	}
 	return (ret);
 }
 
-int	webserv::Client::handle_cgi_response(int fd)
+int	webserv::Client::handle_cgi_response(void)
 {
 	char					filename[100];
 	time_t					t = time(0);
@@ -784,9 +786,10 @@ int	webserv::Client::handle_cgi_response(int fd)
 	std::string				status_code_string;
 	std::string				full_name;
 	std::string				content_type;
+	int						file_fd;
 
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
-
+	file_fd = open(this->_cgi_output_file.c_str(), O_RDONLY, 0666);
 	full_name = std::string("/tmp/") + filename + ".cgi";
 	myfile.open(full_name, std::ios::binary | std::ios::out);
 	if(!myfile.is_open())
@@ -794,32 +797,47 @@ int	webserv::Client::handle_cgi_response(int fd)
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (INTERNAL_SERVER_ERROR);
 	}
-	while ((ret = read(fd, buf, 9999)) > 0)
+	while ((ret = read(file_fd, buf, 9999)) > 0)
 	{
 		std::string tmp;
 
 		tmp.append(buf, ret);
+		/*
+		** This is a little hack since I'm expected the first line to be something like: GET / HTTP/1.1
+		*/
 		if (!hr.is_done())
 		{
-			hr.parse(tmp, ret);
-			int index;
-			if (status_code.empty() && (index = tmp.find("Status: ")) != std::string::npos)
+			int start_index;
+			int end_index;
+
+			if (status_code.empty() && (start_index = tmp.find("Status: ")) != std::string::npos)
 			{
 
-				tmp.erase(index, strlen("Status: "));
-				index = tmp.find(" ");
-				if (index != std::string::npos)
+				tmp.erase(start_index, strlen("Status: "));
+				start_index = tmp.find(" ");
+				if (start_index != std::string::npos)
 				{
-					status_code_string = tmp.substr(index + 1);
-					status_code = tmp.substr(0, index);
+					end_index = tmp.find("\r\n", start_index);
+					status_code_string = tmp.substr(start_index + 1, end_index - start_index - 1);
+					status_code = tmp.substr(0, start_index);
 				}
 			}
+			tmp.clear();
+			tmp.append(buf, ret);
+			if (hr.path.empty())
+			{
+				tmp = "tmp tmp tmp\r\n" + tmp;
+				ret += 13;
+			}
+			hr.parse(tmp, ret);
 		}
 		else
 			break;
 	}
-
-	this->res.set_status_code(status_code, status_code_string);
+	if (!status_code.empty() && !status_code_string.empty())
+		this->res.set_status_code(status_code, status_code_string);
+	else
+		this->res.set_status(OK);
 	webserv::Response::hr_iterator it;
 
 	it = hr.get_headers().begin();
@@ -828,14 +846,14 @@ int	webserv::Client::handle_cgi_response(int fd)
 
 	myfile.write(hr.get_body().c_str(), hr.get_body().length());
 	myfile.write(buf, ret);
-	while ((ret = read(fd, buf, 9999)) > 0)
+	while ((ret = read(file_fd, buf, 9999)) > 0)
 		myfile.write(buf, ret);
 
-	it = hr.get_headers().begin();
-	for (; it != hr.get_headers().end(); it++)
-		std::cout << "HEADER = " << it->first << ":" << it->second << std::endl;
-	content_type = (hr.get_headers().find("content-type"))->second;
-	this->res.set_file(full_name, content_type);
+	it = (hr.get_headers().find("content-type"));
+	if (it != hr.get_headers().end())
+		this->res.set_file(full_name, it->second);
+	myfile.close();
+	close(file_fd);
 	return (__REQUEST_DONE__);
 }
 

@@ -28,7 +28,7 @@
 #  define __PATH_IS_FILE__ 2
 
 #  define __MB_IN_BYTE__ 1048576
-#  define __BYTE_TO_READ__ 1024
+#  define __BYTE_TO_READ__ 2
 
 #  define DIR_LISTING_START "<!DOCTYPE html>\
 								<html>\
@@ -71,6 +71,7 @@ class Client
 		std::map<std::string, webserv::Store>	_servers_list;
 		std::string								_cgi_file;
 		std::string								_cgi_path_info;
+		std::string								_cgi_output_file;
 
 	public:
 		webserv::Request	req;
@@ -120,7 +121,7 @@ class Client
 		int			handle_cgi();
 		char		**prepare_cgi_env();
 		int			execute_cgi(int fd);
-		int			handle_cgi_response(int fd);
+		int			handle_cgi_response();
 
 	/************************ GETTERS/SETTERS ************************/
 	public:

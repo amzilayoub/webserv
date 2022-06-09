@@ -36,6 +36,8 @@ bool webserv::Request::parse(std::string &str, int len)
 	while (!this->_headers_done)
 	{
 		this->_header.parse(str, len);
+		webserv::Logger::debug(str);
+		webserv::Logger::warning("\n\n\n\n\n\n");
 		if (this->_header.is_done())
 		{
 			this->_headers_done = true;

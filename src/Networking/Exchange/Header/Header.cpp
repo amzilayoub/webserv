@@ -119,9 +119,9 @@ void	webserv::Header::_remove_hash_id()
 	size_t query_string_index;
 
 	hash_index = this->path.find("#");
+	query_string_index = this->path.find("?");
 	if (hash_index != std::string::npos)
 	{
-		query_string_index = this->path.find("?");
 		if (query_string_index == std::string::npos)
 			this->path.erase(hash_index);
 		else if (query_string_index >= hash_index)
@@ -129,6 +129,8 @@ void	webserv::Header::_remove_hash_id()
 		else
 			this->path.erase(query_string_index);
 	}
+	else if (query_string_index != std::string::npos)
+		this->path.erase(query_string_index);
 }
 
 void	webserv::Header::print()
