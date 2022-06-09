@@ -25,6 +25,7 @@ class Header
 		std::string							path;
 		std::string							query_string;
 		std::string							protocol_version;
+		std::string							path_info;
 
 	private:
 		bool								_is_done;
@@ -47,6 +48,7 @@ class Header
 	
 	private:
 		void	_get_headers(std::string &str);
+		void	_remove_hash_id(void);
 	
 	/************************ GETTERS AND SETTERS ************************/
 	public:

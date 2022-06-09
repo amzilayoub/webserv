@@ -18,6 +18,7 @@
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
 #  define __REQUEST_ERROR__ 2
+#  define __CANNOT_EXECUTE_CGI__ 5
 
 #  define __RESPONSE_DONE__ __REQUEST_DONE__
 #  define __RESPONSE_IN_PROGRESS__ __REQUEST_IN_PROGRESS__
@@ -69,6 +70,7 @@ class Client
 		struct sockaddr_in						_sin;
 		std::map<std::string, webserv::Store>	_servers_list;
 		std::string								_cgi_file;
+		std::string								_cgi_path_info;
 
 	public:
 		webserv::Request	req;
@@ -92,6 +94,7 @@ class Client
 		void		_fill_methods(void);
 		std::string	_get_file_name(void);
 		bool		_save_file(std::string path_to_upload);
+		int			_open_file(std::string path_to_upload);
 		bool		_file_exists(char const *str);
 		bool		_check_for_read(char const *str);
 		int			_handle_folder(void);
@@ -117,6 +120,7 @@ class Client
 		int			handle_cgi();
 		char		**prepare_cgi_env();
 		int			execute_cgi(int fd);
+		int			handle_cgi_response(int fd);
 
 	/************************ GETTERS/SETTERS ************************/
 	public:

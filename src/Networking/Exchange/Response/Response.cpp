@@ -81,7 +81,6 @@ std::string	webserv::Response::serialize(void)
 	}
 	else if (this->_start_chunked)
 	{
-		
 		char buf[__CHUNK_TO_READ__ + 1];
 
 		this->_response.clear();
@@ -198,6 +197,12 @@ void	webserv::Response::set_config(webserv::Store config)
 	this->config = config;
 }
 
+void	webserv::Response::set_status_code(std::string status_code, std::string status_string)
+{
+	this->_status_code = status_code;
+	this->_status_string = status_string;
+}
+
 std::string	webserv::Response::get_error_file_content(int status_code)
 {
 	std::map<int, std::string>::iterator	it;
@@ -218,3 +223,4 @@ std::string	webserv::Response::get_error_file_content(int status_code)
 	}
 	return ("");
 }
+

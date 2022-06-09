@@ -70,6 +70,7 @@ class Response
 	bool		has_error(void);
 	std::string	get_error_file_content(int status_code);
 	bool		isEOF(void);
+	void		set_status_code(std::string status_code, std::string status_string);
 };
 
 };

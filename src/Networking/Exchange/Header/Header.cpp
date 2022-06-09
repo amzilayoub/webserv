@@ -56,10 +56,9 @@ void	webserv::Header::_get_headers(std::string &str)
 
 	index = this->path.find("?");
 	if (index != std::string::npos)
-	{
 		this->query_string = this->path.substr(index + 1);
-		this->path.erase(index)
-	}
+	this->_remove_hash_id();
+
 	delete line;
 
 	it = words->begin();
@@ -112,6 +111,24 @@ void	webserv::Header::clear()
 	this->_body.clear();
 	this->query_string.clear();
 	this->_is_done = false;
+}
+
+void	webserv::Header::_remove_hash_id()
+{
+	size_t hash_index;
+	size_t query_string_index;
+
+	hash_index = this->path.find("#");
+	if (hash_index != std::string::npos)
+	{
+		query_string_index = this->path.find("?");
+		if (query_string_index == std::string::npos)
+			this->path.erase(hash_index);
+		else if (query_string_index >= hash_index)
+			this->path.erase(hash_index);
+		else
+			this->path.erase(query_string_index);
+	}
 }
 
 void	webserv::Header::print()

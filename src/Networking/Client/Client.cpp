@@ -21,6 +21,7 @@
 # include <stdio.h>
 # include <ftw.h>
 # include <fcntl.h>
+# include <list>
 
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
@@ -92,8 +93,11 @@ int	webserv::Client::handle_request()
 		this->_save_file("/tmp");
 		if (this->check_for_cgi())
 		{
-			if (this->handle_cgi())
-				return (__REQUEST_DONE__);
+			int ret;
+
+			ret = this->handle_cgi();
+			if (ret == __REQUEST_ERROR__ || ret == __REQUEST_DONE__)
+				return (ret);
 		}
 		if (this->req.get_header_obj().method == "post")
 			return (this->_post());
@@ -333,7 +337,27 @@ bool	webserv::Client::_save_file(std::string path_to_upload)
 	myfile.write(this->req.get_body().c_str(), this->req.content_length);
 	myfile.close();
 	return 0;
-return true;
+}
+
+int	webserv::Client::_open_file(std::string path_to_upload)
+{
+	char					filename[100];
+	std::string extension = ".cgi";
+	time_t					t = time(0);
+	struct tm				*now = localtime(&t);
+	int						myfile;
+	std::string				full_name;
+
+	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
+
+	full_name = path_to_upload + "/" + filename + extension;
+	myfile = open(full_name.c_str(), O_RDWR | O_CREAT, 0666);
+	if(myfile < 0)
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (false);
+	}
+	return (myfile);
 }
 
 int		webserv::Client::handle_response()
@@ -617,6 +641,18 @@ int		webserv::Client::check_for_cgi(void)
 		if (webserv::ends_with(this->req.get_header_obj().path, this->req.config.cgi.extension))
 			return (true);
 	}
+	/*
+	** try to check if it's a file + path_info
+	*/
+	size_t index;
+
+	index = this->_full_path.find(this->req.config.cgi.extension);
+	if (index != std::string::npos)
+	{
+		this->_cgi_file = this->_full_path.substr(0, index + this->req.config.cgi.extension.length());
+		this->_cgi_path_info = this->_full_path.substr(index + this->req.config.cgi.extension.length());
+		return (true);
+	}
 	return (false);
 }
 
@@ -646,31 +682,66 @@ char	**webserv::Client::prepare_cgi_env()
 	int												i;
 	std::map<std::string, std::string>::iterator	it;
 	std::string										file_without_root;
+	std::list<std::string>							args_list;
 
 	file_without_root = this->_cgi_file;
 	webserv::replace(file_without_root, this->req.config.root, "");
 	// need to change the size here later on
 	i = -1;
-	arg = (char**)malloc(sizeof(char*) * 10);
-	arg[++i] = std::string("DOCUMENT_ROOT=") + this->req.config.root;
-	arg[++i] = std::string("CONTENT_LENGTH=") + this->req.content_length;
-	
+	arg = (char**)malloc(sizeof(char*) * 20);
+	args_list.push_back((std::string("DOCUMENT_ROOT=") + this->req.config.root));
+	args_list.push_back((std::string("CONTENT_LENGTH=") + std::to_string(this->req.content_length)));
+
 	it = this->req.get_headers().find("content-type");
 	if (it != this->req.get_headers().end())
-		arg[++i] = std::string("CONTENT_TYPE=") + it->second;
-	arg[++i] = std::string("GATEWAY_INTERFACE=CGI/1.1");
-	arg[++i] = std::string("PATH_INFO=") + this->_cgi_file;
-	arg[++i] = std::string("PATH_TRANSLATED=") + file_without_root;
-	arg[++i] = std::string("QUERY_STRING=") + this->req.get_header_obj().query_string;
-	arg[++i] = std::string("REMOTE_ADDR=0.0.0.0");
-	arg[++i] = std::string("REQUEST_METHOD=") + webserv::str_to_upper(this->req.get_header_obj().method);
+		args_list.push_back((std::string("CONTENT_TYPE=") + it->second));
+	args_list.push_back(std::string("GATEWAY_INTERFACE=CGI/1.1"));
+	args_list.push_back((std::string("PATH_INFO=") + this->_cgi_path_info));
+	args_list.push_back((std::string("PATH_TRANSLATED=") + this->req.config.root + this->_cgi_path_info));
+	args_list.push_back((std::string("QUERY_STRING=") + this->req.get_header_obj().query_string));
+	args_list.push_back(std::string("REMOTE_ADDR=0.0.0.0"));
+	args_list.push_back((std::string("REQUEST_METHOD=") + webserv::str_to_upper(this->req.get_header_obj().method)));
+	args_list.push_back((std::string("REQUEST_URI=") + file_without_root + "?" + this->req.get_header_obj().query_string));
+	args_list.push_back((std::string("SCRIPT_NAME=") + file_without_root));
+	args_list.push_back((std::string("SERVER_NAME=") + this->req.config.host));
+	args_list.push_back((std::string("SERVER_PORT=") + std::to_string(this->req.config.port)));
+	args_list.push_back((std::string("SERVER_PROTOCOL=HTTP/1.1")));
+
+	args_list.push_back((std::string("SCRIPT_FILENAME=") + this->_cgi_file));
+	args_list.push_back((std::string("HTTP_HOST=") + this->req.config.host));
+	args_list.push_back((std::string("REDIRECT_STATUS=200")));
+
+	std::list<std::string>::iterator it_l = args_list.begin();
+	for (; it_l != args_list.end(); it_l++)
+		arg[++i] = strdup(it_l->c_str());
+	arg[++i] = NULL;
+	return (arg);
 }
 
 int		webserv::Client::execute_cgi(int fd)
 {
 	pid_t	pid;
 	int		status;
+	char	**env;
+	char	**arg;
+	int		output;
+	int		i;
+	int		ret;
 
+	i = -1;
+	ret = __CANNOT_EXECUTE_CGI__;
+	output = this->_open_file("/tmp");
+	if (output < 0)
+	{
+		this->res.set_one_shot(true);
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (__REQUEST_ERROR__);
+	}
+	env = this->prepare_cgi_env();
+	arg = (char**)malloc(sizeof(char*) * 3);
+	arg[0] = const_cast<char*>(this->req.config.cgi.path.c_str());
+	arg[1] = const_cast<char*>(this->_cgi_file.c_str());
+	arg[2] = NULL;
 	pid = fork();
 	if (pid < 0)
 	{
@@ -680,18 +751,92 @@ int		webserv::Client::execute_cgi(int fd)
 	}
 	else if (pid == 0)
 	{
-		char **arg;
-
-		arg = this->prepare_cgi_env();
 		dup2(fd, 0);
-		execve(arg[0], arg, NULL);
-		exit(0);
+		dup2(output, 1);
+		execve(arg[0], arg, env);
+		exit(1);
 	}
 	else
 	{
 		waitpid(pid, &status, 0);
+		close(fd);
+		while (env[++i])
+			free(env[i]);
+		free(env);
+		free(arg);
+		if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+			ret = this->handle_cgi_response(output);
+		close(output);
 	}
-	return (0);
+	return (ret);
+}
+
+int	webserv::Client::handle_cgi_response(int fd)
+{
+	char					filename[100];
+	time_t					t = time(0);
+	struct tm				*now = localtime(&t);
+	std::ofstream			myfile;
+	webserv::Header			hr;
+	char					buf[10000];
+	int						ret;
+	std::string				status_code;
+	std::string				status_code_string;
+	std::string				full_name;
+	std::string				content_type;
+
+	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
+
+	full_name = std::string("/tmp/") + filename + ".cgi";
+	myfile.open(full_name, std::ios::binary | std::ios::out);
+	if(!myfile.is_open())
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (INTERNAL_SERVER_ERROR);
+	}
+	while ((ret = read(fd, buf, 9999)) > 0)
+	{
+		std::string tmp;
+
+		tmp.append(buf, ret);
+		if (!hr.is_done())
+		{
+			hr.parse(tmp, ret);
+			int index;
+			if (status_code.empty() && (index = tmp.find("Status: ")) != std::string::npos)
+			{
+
+				tmp.erase(index, strlen("Status: "));
+				index = tmp.find(" ");
+				if (index != std::string::npos)
+				{
+					status_code_string = tmp.substr(index + 1);
+					status_code = tmp.substr(0, index);
+				}
+			}
+		}
+		else
+			break;
+	}
+
+	this->res.set_status_code(status_code, status_code_string);
+	webserv::Response::hr_iterator it;
+
+	it = hr.get_headers().begin();
+	for (; it != hr.get_headers().end(); it++)
+		this->res.get_headers()[it->first] = it->second;
+
+	myfile.write(hr.get_body().c_str(), hr.get_body().length());
+	myfile.write(buf, ret);
+	while ((ret = read(fd, buf, 9999)) > 0)
+		myfile.write(buf, ret);
+
+	it = hr.get_headers().begin();
+	for (; it != hr.get_headers().end(); it++)
+		std::cout << "HEADER = " << it->first << ":" << it->second << std::endl;
+	content_type = (hr.get_headers().find("content-type"))->second;
+	this->res.set_file(full_name, content_type);
+	return (__REQUEST_DONE__);
 }
 
 std::string	webserv::Client::_get_index_file(std::string extension)
