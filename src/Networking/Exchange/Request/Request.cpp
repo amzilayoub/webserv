@@ -33,11 +33,9 @@ webserv::Request::Request()
 bool webserv::Request::parse(std::string &str, int len)
 {
 	this->_request_length += len;
-	while (!this->_headers_done)
+	if (!this->_headers_done)
 	{
 		this->_header.parse(str, len);
-		webserv::Logger::debug(str);
-		webserv::Logger::warning("\n\n\n\n\n\n");
 		if (this->_header.is_done())
 		{
 			this->_headers_done = true;
@@ -58,6 +56,8 @@ bool webserv::Request::parse(std::string &str, int len)
 			}
 			return true;
 		}
+		else
+			return (true);
 	}
 	if (this->_is_chunked)
 		return (this->handle_chunked_request(str, len));
@@ -237,6 +237,9 @@ bool	webserv::Request::is_done(void)
 	/*
 	**the -4 is for \r\n\r\n
 	*/
+	if (!this->_header.is_done())
+		return (false);
+
 	size_t body_length = this->_request_length - this->get_header_obj().get_raw_header_len() - 4;
 	
 	if (this->_transfer_encoding == "chunked")

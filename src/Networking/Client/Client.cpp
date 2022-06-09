@@ -53,7 +53,6 @@ int	webserv::Client::handle_request()
 	else if (len > 0)
 	{
 		std::string buffer(buf, len);
-		webserv::Logger::debug(std::to_string(len));
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -62,7 +61,6 @@ int	webserv::Client::handle_request()
 	}
 	else if (len < 0)
 	{
-		webserv::Logger::debug(std::to_string(len));
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
