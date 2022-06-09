@@ -660,13 +660,13 @@ int		webserv::Client::handle_cgi(void)
 {
 	int fd;
 
-	if (!this->_check_for_read(this->_cgi_file.c_str()))
+	if (!this->_check_for_read(this->_file_name.c_str()))
 	{
 		this->res.set_one_shot(true);
 		this->res.error(FORBIDDEN);
 		return (__REQUEST_ERROR__);
 	}
-	fd = open(this->_cgi_file.c_str(), O_RDONLY);
+	fd = open(this->_file_name.c_str(), O_RDONLY);
 	if (fd < 0)
 	{
 		this->res.set_one_shot(true);
