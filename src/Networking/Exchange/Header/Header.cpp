@@ -38,7 +38,6 @@ void	webserv::Header::parse(std::string &str, int len)
 
 void	webserv::Header::_get_headers(std::string &str)
 {
-	std::string							key;
 	std::string							value;
 	std::list<std::string>				*line;
 	std::list<std::string>				*words;
@@ -71,6 +70,8 @@ void	webserv::Header::_get_headers(std::string &str)
 	while (it != words->end())
 	{
 		std::string value;
+		std::string key;
+		std::map<std::string, std::string>::iterator it_find;
 
 		line = webserv::split((*it), ":");
 		tmp_it = line->begin();
@@ -82,7 +83,15 @@ void	webserv::Header::_get_headers(std::string &str)
 		for (; tmp_it != line->end(); tmp_it++)
 			value += (*tmp_it) + ":";
 		value.pop_back();
-		this->_headers[webserv::str_to_lower(line->front())] = value.substr(1);
+		key = webserv::str_to_lower(line->front());
+		value = value.substr(1);
+		if (key == "set-cookie")
+		{
+			it_find = this->_headers.find("set-cookie");
+			if (it_find != this->_headers.end())
+				value = it_find->second + "\r\nset-cookie: " + value;
+		}
+		this->_headers[key] = value;
 		++it;
 		delete line;
 	}

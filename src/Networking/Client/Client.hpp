@@ -28,7 +28,8 @@
 #  define __PATH_IS_FILE__ 2
 
 #  define __MB_IN_BYTE__ 1048576
-#  define __BYTE_TO_READ__ 1024
+// #  define __BYTE_TO_READ__ 1024
+#  define __BYTE_TO_READ__ 4096
 
 #  define DIR_LISTING_START "<!DOCTYPE html>\
 								<html>\

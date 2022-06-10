@@ -706,6 +706,12 @@ char	**webserv::Client::prepare_cgi_env()
 	args_list.push_back((std::string("SERVER_NAME=") + this->req.config.host));
 	args_list.push_back((std::string("SERVER_PORT=") + std::to_string(this->req.config.port)));
 	args_list.push_back((std::string("SERVER_PROTOCOL=HTTP/1.1")));
+	it = this->req.get_headers().find("cookie");
+	if (it != this->req.get_headers().end())
+	{
+		args_list.push_back((std::string("HTTP_COOKIE=")) + it->second);
+		webserv::Logger::debug(it->second);
+	}
 
 	args_list.push_back((std::string("SCRIPT_FILENAME=") + this->_cgi_file));
 	args_list.push_back((std::string("HTTP_HOST=127.0.0.1:") + std::to_string(this->req.config.port)));

@@ -40,6 +40,7 @@ class Store
 		bool								is_autoindex_set;
 		unsigned int						client_max_body_size;
 		std::map<std::string, std::string>	redirection;
+		std::list<t_cgi>					cgi_list;
 		t_cgi								cgi;
 		std::string							location;
 		std::list<Store>					location_object;
