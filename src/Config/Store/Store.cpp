@@ -67,7 +67,7 @@ void	webserv::Store::clear()
 bool	webserv::Store::check()
 {
 	std::list<Store>::iterator it;
-	// std::list<t_cgi>::iterator cgi_it;
+	std::list<t_cgi>::iterator cgi_it;
 
 	if (this->host.empty())
 		return (this->error("Host cannot be empty"));
@@ -76,9 +76,12 @@ bool	webserv::Store::check()
 	else if (this->allow_methods.empty())
 		return (this->error("allow_methods cannot be empty"));
 	
-	// cgi_it = std::list.
-	else if (!this->cgi.extension.empty() && this->cgi.path.empty())
-		return (this->error("cgi path cannot be empty"));
+	cgi_it = this->cgi_list.begin();
+	for (; cgi_it != this->cgi_list.end(); cgi_it++)
+	{
+		if (!cgi_it->extension.empty() && cgi_it->path.empty())
+			return (this->error("cgi path cannot be empty"));
+	}
 
 	it = this->location_object.begin();
 	for (; it != this->location_object.end(); it++)
@@ -163,6 +166,7 @@ webserv::Store &webserv::Store::operator=(webserv::Store const &rhs)
 	this->is_autoindex_set = rhs.is_autoindex_set;
 	this->cgi.path = rhs.cgi.path;
 	this->cgi.extension = rhs.cgi.extension;
+	this->cgi_list = rhs.cgi_list;
 
 	return (*this);
 }

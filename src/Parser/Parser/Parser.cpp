@@ -269,15 +269,17 @@ bool webserv::Parser::_redirection_token(webserv::Store &store)
 bool webserv::Parser::_cgi_token(webserv::Store &store)
 {
 	std::string	value;
+	t_cgi		tmp;
 
 	value = this->_lexer->nextToken();
 	if (value.front() != '.')
 		return (false);
-	store.cgi.extension = value;
+	tmp.extension = value;
 	value = this->_lexer->join();
 	if (value == __SEMI_COLON__)
 		return (false);
-	store.cgi.path = value;
+	tmp.path = value;
+	store.cgi_list.push_back(tmp);
 	return (true);
 }
 

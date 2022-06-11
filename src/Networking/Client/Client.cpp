@@ -623,35 +623,45 @@ std::string		webserv::Client::_add_slash(std::string const &str)
 
 int		webserv::Client::check_for_cgi(void)
 {
-	int type;
+	std::list<t_cgi>::iterator	it;
+	int							type;
 
-	if (this->req.config.cgi.extension.empty())
-		return (false);
-	type = this->_get_path_type();
-	if (type == __PATH_IS_DIR__)
+	it = this->req.config.cgi_list.begin();
+	for (; it != this->req.config.cgi_list.end(); it++)
 	{
-		this->_cgi_file = this->_get_index_file(this->req.config.cgi.extension);
-		if (this->_cgi_file == "")
-			return (false);
-		return (true);
-	}
-	else if (type == __PATH_IS_FILE__)
-	{
-		this->_cgi_file = this->_full_path;
-		if (webserv::ends_with(this->req.get_header_obj().path, this->req.config.cgi.extension))
+		if (it->extension.empty())
+			continue ;
+		type = this->_get_path_type();
+		if (type == __PATH_IS_DIR__)
+		{
+			this->_cgi_file = this->_get_index_file(it->extension);
+			if (this->_cgi_file == "")
+				continue ;
+			this->req.config.cgi = (*it);
 			return (true);
-	}
-	/*
-	** try to check if it's a file + path_info
-	*/
-	size_t index;
+		}
+		else if (type == __PATH_IS_FILE__)
+		{
+			this->_cgi_file = this->_full_path;
+			if (webserv::ends_with(this->req.get_header_obj().path, it->extension))
+			{
+				this->req.config.cgi = (*it);
+				return (true);
+			}
+		}
+		/*
+		** try to check if it's a file + path_info
+		*/
+		size_t index;
 
-	index = this->_full_path.find(this->req.config.cgi.extension);
-	if (index != std::string::npos)
-	{
-		this->_cgi_file = this->_full_path.substr(0, index + this->req.config.cgi.extension.length());
-		this->_cgi_path_info = this->_full_path.substr(index + this->req.config.cgi.extension.length());
-		return (true);
+		index = this->_full_path.find(it->extension);
+		if (index != std::string::npos)
+		{
+			this->_cgi_file = this->_full_path.substr(0, index + it->extension.length());
+			this->_cgi_path_info = this->_full_path.substr(index + it->extension.length());
+			this->req.config.cgi = (*it);
+			return (true);
+		}
 	}
 	return (false);
 }
@@ -708,10 +718,7 @@ char	**webserv::Client::prepare_cgi_env()
 	args_list.push_back((std::string("SERVER_PROTOCOL=HTTP/1.1")));
 	it = this->req.get_headers().find("cookie");
 	if (it != this->req.get_headers().end())
-	{
 		args_list.push_back((std::string("HTTP_COOKIE=")) + it->second);
-		webserv::Logger::debug(it->second);
-	}
 
 	args_list.push_back((std::string("SCRIPT_FILENAME=") + this->_cgi_file));
 	args_list.push_back((std::string("HTTP_HOST=127.0.0.1:") + std::to_string(this->req.config.port)));
