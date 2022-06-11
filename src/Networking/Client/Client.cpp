@@ -301,7 +301,6 @@ int		webserv::Client::_handle_folder(void)
 {
 	std::string index_file = this->_get_index_file();
 
-	std::cout << "index_file = " << index_file << std::endl;
 	if (index_file != "")
 	{
 		this->res.set_file(index_file, this->get_file_type(index_file));

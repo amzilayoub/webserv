@@ -84,12 +84,13 @@ void	webserv::Server::_lunch_worker()
 		it = this->sockets.begin();
 
 		if (fd < 0) continue;
-		// else if (this->kq.isEOF(i))
-		// {
-		// 	close(fd);
-		// 	webserv::Logger::warning("Client disconnected...");
-		// 	continue ;
-		// }
+		else if (this->kq.isEOF(i))
+		{
+			close(fd);
+			webserv::Logger::warning("Client disconnected...");
+			this->clients.erase(fd);
+			continue ;
+		}
 		for (; it != this->sockets.end(); it++)
 		{
 			if (fd == it->getSocket()) {
