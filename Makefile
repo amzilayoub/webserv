@@ -1,3 +1,11 @@
+COMPILER=clang++
+
+FLAGS= -Wall -Wextra -Werror
+
+STD98=-std=c++98
+
+NAME=webserv
+
 SRC = main.cpp 											\
 	./src/Parser/CharacterReader/CharacterReader.cpp	\
 	./src/Parser/Lexer/Lexer.cpp						\
@@ -21,11 +29,18 @@ SRC = main.cpp 											\
 	./src/Logger/Logger.cpp								\
 
 
-all:
-	clang++ -fsanitize=address -std=c++98 $(SRC)
+
+all: $(NAME)
+
+$(NAME):
+	$(COMPILER) $(FLAGS) $(STD98) $(SRC) -o $(NAME)
 
 debug:
-	clang++ -g -fsanitize=address -std=c++98 $(SRC)
+	$(COMPILER) $(FLAGS) -g $(STD98) $(SRC) -o $(NAME)
 
-find:
-	lsof -t -i:80 
+clean:
+	rm -rf $(NAME)
+
+fclean: clean
+
+re : fclean all

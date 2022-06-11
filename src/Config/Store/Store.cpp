@@ -39,7 +39,7 @@ void	webserv::Store::attach_location(webserv::Store const &rhs)
 	this->index = (rhs.index.empty() ? this->index : rhs.index);
 	this->error_page = (rhs.error_page.empty() ? this->error_page : rhs.error_page);
 	this->autoindex = (rhs.is_autoindex_set ? rhs.autoindex : this->autoindex);
-	this->client_max_body_size = (rhs.client_max_body_size == -1 ? this->client_max_body_size : rhs.client_max_body_size);
+	this->client_max_body_size = (rhs.client_max_body_size == static_cast<unsigned int>(-1) ? this->client_max_body_size : rhs.client_max_body_size);
 	this->redirection = (rhs.redirection.empty() ? this->redirection : rhs.redirection);
 }
 

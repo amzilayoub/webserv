@@ -14,6 +14,9 @@
 
 int unlink_file(const char *fpath, const struct stat *sb, int typeflag, struct FTW *ftwbuf)
 {
+	(void)sb;
+	(void)typeflag;
+
 	if (ftwbuf->level > 0)
 	{
 		if (remove(fpath))

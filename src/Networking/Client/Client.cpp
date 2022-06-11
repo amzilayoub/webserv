@@ -64,7 +64,6 @@ int	webserv::Client::handle_request()
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
-	// std::cout << std::string(buf, len) << std::endl;
 	if (this->req.is_done())
 	{
 		this->_url_decode();
@@ -125,7 +124,7 @@ void		webserv::Client::match_config()
 		std::string key;
 
 		key = ":" + std::to_string(this->_port) + "_";
-		if ((it->first.find(key) != std::string::npos) && it->second.port == this->_port)
+		if ((it->first.find(key) != std::string::npos) && it->second.port == static_cast<unsigned int>(this->_port))
 			possible_servers.push_back(it->second);
 	}
 	default_serv = possible_servers.front();
@@ -139,8 +138,8 @@ void		webserv::Client::match_config()
 		for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
 		{
 
-			if (it_header->second.find(":") != std::string::npos)
-			{
+			// if (it_header->second.find(":") != std::string::npos)
+			// {
 				std::string str;
 
 				str = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
@@ -148,9 +147,8 @@ void		webserv::Client::match_config()
 				{
 					possible_servers.erase(it_poss_serv);
 					it_poss_serv = possible_servers.begin();
-					continue ;
 				}
-			}
+			// }
 		}
 	}
 
@@ -236,7 +234,9 @@ struct stat s;
 			this->res.error(FORBIDDEN);
 			return (__REQUEST_ERROR__);
 		}
-		// delete the whole folder
+		/*
+		** delete the whole folder
+		*/
 		else if (S_ISDIR(s.st_mode))
 			return (this->_delete_folder());
 		/*
@@ -249,7 +249,6 @@ struct stat s;
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
-	// if (this->req.config.autoindex)
 
 	return (__REQUEST_DONE__);
 }
@@ -364,13 +363,9 @@ int		webserv::Client::handle_response()
 	int			len = 0;
 	std::string	buf;
 	int			action;
-	static const char* index_html = "HTTP/1.0 405 OK\r\n" \
-								"Content-Length: 22\r\n\r\n" \
-								"405 Method not allowed\r\n";
 
 	action = __RESPONSE_IN_PROGRESS__;
 	buf = this->res.serialize();
-	// std::cout << "RESPONSE = " << buf << std::endl;
 	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) != 0) {
 	}
 	if (this->res.is_done())
@@ -525,13 +520,11 @@ bool	webserv::Client::check_allowed_methods()
 		this->res.error(METHOD_NOT_IMPLEMENTED);
 		return (false);
 	}
-	// std::cout << "METHOD = " << (*it) << std::endl;
 	return (true);
 }
 
 bool	webserv::Client::check_resources_exists()
 {
-	// std::cout << "TARGET = " << this->req.config.root + this->req.get_header_obj().path << std::endl; 
 	if (!this->_file_exists((this->req.config.root + this->req.get_header_obj().path).c_str()))
 	{
 		this->res.error(NOT_FOUND);
@@ -542,7 +535,7 @@ bool	webserv::Client::check_resources_exists()
 
 bool	webserv::Client::check_entity_length()
 {
-	if ((this->_content_length / __MB_IN_BYTE__) > this->req.config.client_max_body_size)
+	if (static_cast<unsigned int>((this->_content_length / __MB_IN_BYTE__)) > this->req.config.client_max_body_size)
 	{
 		this->res.error(PAYLOAD_TOO_LARGE);
 		return (false);
@@ -695,7 +688,6 @@ char	**webserv::Client::prepare_cgi_env()
 
 	file_without_root = this->_cgi_file;
 	webserv::replace(file_without_root, this->req.config.root, "");
-	// need to change the size here later on
 	i = -1;
 	arg = (char**)malloc(sizeof(char*) * 20);
 	args_list.push_back((std::string("DOCUMENT_ROOT=") + this->req.config.root));
@@ -817,8 +809,8 @@ int	webserv::Client::handle_cgi_response(void)
 		*/
 		if (!hr.is_done())
 		{
-			int start_index;
-			int end_index;
+			size_t start_index;
+			size_t end_index;
 
 			if (status_code.empty() && (start_index = tmp.find("Status: ")) != std::string::npos)
 			{

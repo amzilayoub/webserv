@@ -13,7 +13,6 @@
 # include <sstream>
 # include "../../../Logger/Logger.hpp"
 
-// # include <stdlib.h>
 /************************ MEMBER ATTRIBUTES ************************/
 webserv::Response::Response()
 {
@@ -88,8 +87,7 @@ std::string	webserv::Response::serialize(void)
 
 		buf[this->_file.gcount()] = 0;
 		this->_response = this->to_hexa(this->_file.gcount()) + "\r\n";
-		// this->_response += std::string(buf, 0, this->_file.gcount());
-		this->_response.append(buf, this->_file.gcount()); // += std::string(buf, 0, this->_file.gcount());
+		this->_response.append(buf, this->_file.gcount());
 		this->_response += std::string("\r\n", 0, 2);
 
 		if (this->_file.gcount() == 0)
@@ -106,7 +104,6 @@ std::string	webserv::Response::serialize(void)
 		this->_start_chunked = true;
 		this->_is_done = false;
 	}
-	// std::cout << this->_response << std::endl;
 	return (this->_response);
 }
 

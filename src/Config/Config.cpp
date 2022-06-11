@@ -31,12 +31,6 @@ void	webserv::Config::parse(std::string const &path)
 		this->config.push_back(store);
 		store.clear();
 	}
-	
-	// std::list<webserv::Store>::iterator it = this->config.begin();
-	// for (; it != this->config.end(); it++)
-	// {
-	// 	(*it).print();
-	// }
 }
 
 void	webserv::Config::get_url_encoding()

@@ -39,7 +39,6 @@ bool webserv::Request::parse(std::string &str, int len)
 		if (this->_header.is_done())
 		{
 			this->_headers_done = true;
-			// std::cout << "get_body" << this->_body << std::endl;
 			std::map<std::string, std::string>::iterator it = this->_header.get_headers().find("content-length");
 			if (it != this->_header.get_headers().end())
 			{
@@ -99,52 +98,6 @@ bool webserv::Request::handle_chunked_request(std::string &str, int len)
 		last_index += to_read;
 		this->_body.erase(last_index, 2);
 	}
-
-
-
-
-
-	// std::string body;
-	// size_t		index;
-
-	// if (this->_chunk_left_to_read == -1)
-	// {
-	// 	index = str.find("\r\n");
-	// 	if (index != std::string::npos)
-	// 	{
-	// 		this->_chunk_left_to_read = this->to_int(str.substr(0, index));
-	// 		this->content_length += this->_chunk_left_to_read;
-	// 		if (!this->_chunk_left_to_read)
-	// 		{
-	// 			std::cout << "CHUNCKED IS DONE" << std::endl;
-	// 			this->_is_chunked = false;
-	// 			return (true);
-	// 		}
-	// 		str.erase(0, index + 2);
-	// 		len -= (index + 2);
-	// 	}
-	// 	else
-	// 		return (false);
-	// }
-	// if (this->_chunk_left_to_read >= len)
-	// {
-	// 	// this->_body.append(str.substr(0, len), len);
-	// 	this->_body += std::string(str.substr(0, len), 0, len);
-	// 	this->_chunk_left_to_read -= len;
-	// }
-	// else if (this->_chunk_left_to_read < len)
-	// {
-	// 	this->_body += std::string(str.substr(0, this->_chunk_left_to_read), 0, this->_chunk_left_to_read);
-	// 	// this->_body.append(str.substr(0, this->_chunk_left_to_read), this->_chunk_left_to_read);
-	// 	/*
-	// 	** -2 or +2 for \r\n
-	// 	*/
-	// 	len -= this->_chunk_left_to_read - 2;
-	// 	str.erase(0, this->_chunk_left_to_read + 2);
-	// 	this->_chunk_left_to_read = -1;
-	// 	return (this->handle_chunked_request(str, len));
-	// }
-	// return (true);
 }
 
 void webserv::Request::clear()
@@ -168,7 +121,7 @@ void	webserv::Request::handle_location(void)
 	std::string					target_location;
 	std::string					location;
 	std::string					path;
-	int							longest_macth;
+	size_t						longest_macth;
 
 	it = this->config.location_object.begin();
 	longest_macth = 0;
@@ -191,7 +144,6 @@ void	webserv::Request::handle_location(void)
 			*/
 			if (longest_macth > location.length() && !location.empty())
 				continue ;
-			// std::cout << location << std::endl;
 			longest_macth = location.length();
 			target = (*it);
 			target_location = location;
@@ -206,7 +158,6 @@ void	webserv::Request::handle_location(void)
 		this->config.attach_location(target);
 		std::cout << "this->_header.path = " << this->_header.path << std::endl;
 		std::cout << "target.root = " << target.root << std::endl;
-		// std::cout << longest_macth << "|" << target.location << std::endl;
 	}
 }
 
@@ -231,9 +182,6 @@ int	webserv::Request::to_int(std::string str)
 
 bool	webserv::Request::is_done(void)
 {
-	// std::cout << "BODY LENGTH = " << this->_request_length << std::endl;
-	// std::cout << "content_length = " << this->content_length << std::endl;
-	// std::cout << "this->get_header_obj().method = " << this->_header.method << std::endl;
 	/*
 	**the -4 is for \r\n\r\n
 	*/

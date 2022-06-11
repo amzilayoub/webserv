@@ -16,7 +16,6 @@ webserv::Parser::Parser(webserv::CharacterReader &cr)
 {
 	this->_lexer = new webserv::Lexer(cr);
 	this->_object_level = 0;
-	// this->_special_char = "{}:;$";
 	this->_token_analyser["server"] = &Parser::_server_token;
 	this->_token_analyser["listen"] = &Parser::_listen_token;
 	this->_token_analyser["server_name"] = &Parser::_server_name_token;
@@ -106,6 +105,7 @@ bool webserv::Parser::_server_token(webserv::Store &store)
 	std::string token;
 	int			isValid;
 
+	(void)store;
 	token = this->_lexer->nextToken();
 	if (token == __LEFT_BRACKETS__)
 	{
@@ -325,6 +325,7 @@ bool webserv::Parser::_location_token(webserv::Store &store)
 
 bool webserv::Parser::_right_bracket_token(webserv::Store &store)
 {
+	(void)store;
 	this->_object_level--;
 
 	return (true);

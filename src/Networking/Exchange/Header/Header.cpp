@@ -44,7 +44,6 @@ void	webserv::Header::_get_headers(std::string &str)
 	std::list<std::string>::iterator	it;
 	std::list<std::string>::iterator	tmp_it;
 	size_t 								index;
-	int									i;
 
 	words = webserv::split(str, "\r\n");
 	line = webserv::split(words->front(), " ");
