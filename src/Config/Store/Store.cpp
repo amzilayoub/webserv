@@ -112,8 +112,9 @@ void	webserv::Store::print() const
 {
 	std::cout << "host: " << this->host << std::endl;
 	std::cout << "port: " << this->port << std::endl;
-	std::cout << "root: " << this->root << std::endl;
 	std::cout << "server_name: " << this->server_name << std::endl;
+
+	std::cout << "root: " << this->root << std::endl;
 	
 	std::cout << "allow_methods: " << std::endl;
 	std::list<std::string>::const_iterator allow_methods_it = this->allow_methods.begin();

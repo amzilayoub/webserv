@@ -29,12 +29,18 @@ webserv::Socket::~Socket()
 /************************ MEMBER FUNCTIONS ************************/
 void	webserv::Socket::create_socket(int domain, int type, int protocol)
 {
+	int tmp;
+
+	tmp = 1;
 	this->_domain = domain;
 	this->_type = type;
 	this->_protocol = protocol;
 
 	this->_socket = socket(domain, type, protocol);
 	this->test_error(this->_socket, "create_socket functions");
+	this->test_error(
+		setsockopt(this->_socket, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(int)),
+		"Setsockopt function");
 }
 
 void	webserv::Socket::bind_socket(int addr, int port)

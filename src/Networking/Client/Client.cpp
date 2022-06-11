@@ -17,11 +17,12 @@
 # include "../../Logger/Logger.hpp"
 # include "../../Utils/Utils.hpp"
 # include <dirent.h>
-# define _POSIX_C_SOURCE
 # include <stdio.h>
 # include <ftw.h>
 # include <fcntl.h>
 # include <list>
+# include "../Kqueue/Kqueue.hpp"
+# define _POSIX_C_SOURCE
 
 /************************ CONSTRUCTOR/DESTRUCTOR ************************/
 webserv::Client::Client(void)
@@ -45,7 +46,9 @@ int	webserv::Client::handle_request()
 	int len;
 	char buf[__BYTE_TO_READ__];
 
-	if ((len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0)) == 0) {
+	len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0);
+	webserv::Logger::debug(std::to_string(len));
+	if (len == 0) {
 		webserv::Logger::warning("Client disconnected...");
 		close(this->_fd);
 		return (__REMOVE_CLIENT__);
@@ -61,12 +64,12 @@ int	webserv::Client::handle_request()
 	}
 	else if (len < 0)
 	{
+		perror("");
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
 	if (this->req.is_done())
 	{
-		webserv::Logger::debug("REQUEST IS DONE");
 		this->_url_decode();
 		this->match_config();
 		this->_content_length = 0;
@@ -87,8 +90,6 @@ int	webserv::Client::handle_request()
 			return (__REQUEST_ERROR__);
 		if (!this->check_entity_length())
 			return (__REQUEST_ERROR__);
-		if (!this->check_supported_media_type())
-			return (__REQUEST_ERROR__);
 		this->_save_file("/tmp");
 		if (this->check_for_cgi())
 		{
@@ -99,7 +100,11 @@ int	webserv::Client::handle_request()
 				return (ret);
 		}
 		if (this->req.get_header_obj().method == "post")
+		{
+			if (!this->check_supported_media_type())
+				return (__REQUEST_ERROR__);
 			return (this->_post());
+		}
 		else if (this->req.get_header_obj().method == "get")
 			return (this->_get());
 		else if (this->req.get_header_obj().method == "delete")
@@ -345,6 +350,7 @@ int	webserv::Client::_open_file(std::string path_to_upload)
 	struct tm				*now = localtime(&t);
 	int						myfile;
 	std::string				full_name;
+	webserv::Kqueue			kq;
 
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
 
@@ -356,6 +362,8 @@ int	webserv::Client::_open_file(std::string path_to_upload)
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (false);
 	}
+	kq.create_event(myfile, EVFILT_WRITE);
+	kq.get_event();
 	return (myfile);
 }
 
@@ -367,8 +375,10 @@ int		webserv::Client::handle_response()
 
 	action = __RESPONSE_IN_PROGRESS__;
 	buf = this->res.serialize();
-	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) != 0) {
-	}
+	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) == 0)
+		close(this->_fd);
+	else if (len < 0)
+		webserv::Logger::error("Send function: ");
 	if (this->res.is_done())
 	{
 		action = __RESPONSE_DONE__;
@@ -661,7 +671,7 @@ int		webserv::Client::check_for_cgi(void)
 
 int		webserv::Client::handle_cgi(void)
 {
-	int fd;
+	int				fd;
 
 	if (!this->_check_for_read(this->_file_name.c_str()))
 	{
@@ -790,9 +800,16 @@ int	webserv::Client::handle_cgi_response(void)
 	std::string				full_name;
 	std::string				content_type;
 	int						file_fd;
+	webserv::Kqueue			kq;
 
 	strftime(filename, 100, "%Y-%m-%d-%H-%M-%S", now);
-	file_fd = open(this->_cgi_output_file.c_str(), O_RDONLY, 0666);
+	if ((file_fd = open(this->_cgi_output_file.c_str(), O_RDONLY, 0666)) < 0)
+	{
+		this->res.error(INTERNAL_SERVER_ERROR);
+		return (INTERNAL_SERVER_ERROR);
+	}
+	kq.create_event(file_fd, EVFILT_READ);
+	kq.get_event();
 	full_name = std::string("/tmp/") + filename + ".cgi";
 	myfile.open(full_name, std::ios::binary | std::ios::out);
 	if(!myfile.is_open())

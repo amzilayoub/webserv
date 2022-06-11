@@ -156,8 +156,6 @@ void	webserv::Request::handle_location(void)
 			target_location.pop_back();
 		webserv::replace(this->_header.path, target_location, "");
 		this->config.attach_location(target);
-		std::cout << "this->_header.path = " << this->_header.path << std::endl;
-		std::cout << "target.root = " << target.root << std::endl;
 	}
 }
 

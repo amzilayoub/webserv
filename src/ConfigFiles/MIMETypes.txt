@@ -19,6 +19,7 @@
 .gz GZip Compressed Archive application/gzip
 .gif Graphics Interchange Format (GIF) image/gif
 .htm .html HyperText Markup Language (HTML) text/html
+.html .html HyperText Markup Language (HTML) text/html
 .ico Icon format image/vnd.microsoft.icon
 .ics iCalendar format text/calendar
 .jar Java Archive (JAR) application/java-archive

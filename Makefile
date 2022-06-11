@@ -29,7 +29,6 @@ SRC = main.cpp 											\
 	./src/Logger/Logger.cpp								\
 
 
-
 all: $(NAME)
 
 $(NAME):

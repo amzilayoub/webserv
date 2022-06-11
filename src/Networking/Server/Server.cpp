@@ -80,11 +80,13 @@ void	webserv::Server::_lunch_worker()
 {
 	int										ev_count;
 	std::list<webserv::Socket>::iterator	it;
+	bool									is_socket;
 
 	ev_count = this->kq.get_event();
 	for (int i = 0; i < ev_count; i++) {
 		int fd = this->kq.get_fd(i);
 
+		is_socket = false;
 		it = this->sockets.begin();
 
 		if (fd < 0) continue;
@@ -98,6 +100,7 @@ void	webserv::Server::_lunch_worker()
 		for (; it != this->sockets.end(); it++)
 		{
 			if (fd == it->getSocket()) {
+				is_socket = true;
 				int clientfd = it->accept_socket();
 
 				webserv::Logger::info("New connection arrived");
@@ -116,6 +119,8 @@ void	webserv::Server::_lunch_worker()
 				continue ;
 			}
 		}
+		if (is_socket)
+			continue ;
 		if (this->kq.is_read_available(i))
 		{
 			int ret;
