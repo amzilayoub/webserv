@@ -114,7 +114,7 @@ void webserv::Request::clear()
 	this->_transfer_encoding.clear();
 }
 
-void	webserv::Request::handle_location(void)
+std::string	webserv::Request::handle_location(void)
 {
 	std::list<Store>::iterator	it;
 	webserv::Store				target;
@@ -151,12 +151,20 @@ void	webserv::Request::handle_location(void)
 	}
 	if (longest_macth)
 	{
+		if (this->_header.path.back() != '/')
+		{
+			if (target_location.back() == '/')
+				target_location.pop_back();
+			if (this->_header.path == target_location)
+				return (this->_header.path + "/");
+		}
 		this->html_path = this->_header.path;
 		if (target_location.back() == '/')
 			target_location.pop_back();
 		webserv::replace(this->_header.path, target_location, "");
 		this->config.attach_location(target);
 	}
+	return ("");
 }
 
 int	webserv::Request::to_int(std::string str)

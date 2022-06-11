@@ -47,7 +47,6 @@ int	webserv::Client::handle_request()
 	char buf[__BYTE_TO_READ__];
 
 	len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0);
-	webserv::Logger::debug(std::to_string(len));
 	if (len == 0) {
 		webserv::Logger::warning("Client disconnected...");
 		close(this->_fd);
@@ -72,6 +71,15 @@ int	webserv::Client::handle_request()
 	{
 		this->_url_decode();
 		this->match_config();
+		std::string redirect = this->req.handle_location();
+
+		if (redirect != "")
+		{
+			this->res.set_one_shot(true);
+			this->res.set_header("Location", redirect);
+			this->res.set_status(MOVED_PERMANENTLY);
+			return (__REQUEST_DONE__);
+		}
 		this->_content_length = 0;
 		this->res.set_header("Host", this->req.config.host + ":" + std::to_string(this->req.config.port));
 		this->res.set_header("Server", this->req.config.server_name);
@@ -190,7 +198,6 @@ void		webserv::Client::match_config()
 		this->req.set_config(webserv::Store(possible_servers.front()));
 		this->res.set_config(webserv::Store(possible_servers.front()));
 	}
-	this->req.handle_location();
 }
 
 
