@@ -32,21 +32,26 @@ webserv::Server::Server(webserv::Config &config) : config(config)
 
 	for (; it != this->config.config.end(); it++)
 	{
-		webserv::Socket									tmp_sock;
-		std::string										virt_serv;
-		std::map<std::string, webserv::Store>::iterator	virt_it;
-		std::list<int>::iterator						port_it;
+		webserv::Socket													tmp_sock;
+		std::string														virt_serv;
+		std::list<std::pair<std::string, webserv::Store> >::iterator	virt_it;
+		std::list<int>::iterator										port_it;
 
 		virt_serv = it->host + ":" + std::to_string(it->port) + "_" + it->server_name;
 		
-		virt_it = this->virt_serv_config.find(virt_serv);
+		virt_it = this->virt_serv_config.begin();
+		for (; virt_it != this->virt_serv_config.end(); virt_it++)
+		{
+			if (virt_it->first == virt_serv)
+				break ;
+		}
 		port_it = std::find(this->used_ports.begin(), this->used_ports.end(), it->port);
 		/*
 		** In case we have same host and port and server name not set,
 		** We will use the default one (the first one)
 		*/
 		if (virt_it == this->virt_serv_config.end())
-			this->virt_serv_config[virt_serv] = (*it);
+			this->virt_serv_config.push_back(std::make_pair(virt_serv, (*it)));
 		if (port_it != this->used_ports.end())
 			continue ;
 		tmp_sock.create_socket(AF_INET, SOCK_STREAM, 0);
@@ -76,7 +81,6 @@ void	webserv::Server::_lunch_worker()
 	int										ev_count;
 	std::list<webserv::Socket>::iterator	it;
 
-	webserv::Logger::info("Waiting for event....");
 	ev_count = this->kq.get_event();
 	for (int i = 0; i < ev_count; i++) {
 		int fd = this->kq.get_fd(i);

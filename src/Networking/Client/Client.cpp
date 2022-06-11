@@ -66,6 +66,7 @@ int	webserv::Client::handle_request()
 	}
 	if (this->req.is_done())
 	{
+		webserv::Logger::debug("REQUEST IS DONE");
 		this->_url_decode();
 		this->match_config();
 		this->_content_length = 0;
@@ -109,11 +110,11 @@ int	webserv::Client::handle_request()
 
 void		webserv::Client::match_config()
 {
-	std::list<webserv::Store>						possible_servers;
-	std::map<std::string, webserv::Store>::iterator	it;
-	std::list<webserv::Store>::iterator				it_poss_serv;
-	webserv::Response::hr_iterator					it_header;
-	webserv::Store									default_serv;
+	std::list<webserv::Store>										possible_servers;
+	std::list<std::pair<std::string, webserv::Store> >::iterator	it;
+	std::list<webserv::Store>::iterator								it_poss_serv;
+	webserv::Response::hr_iterator									it_header;
+	webserv::Store													default_serv;
 	
 	it = this->_servers_list.begin();
 	/*
@@ -145,8 +146,8 @@ void		webserv::Client::match_config()
 				str = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
 				if (str.find(it_header->second) == std::string::npos)
 				{
-					possible_servers.erase(it_poss_serv);
-					it_poss_serv = possible_servers.begin();
+					possible_servers.erase(it_poss_serv--);
+					// it_poss_serv = possible_servers.begin();
 				}
 			// }
 		}
@@ -907,6 +908,18 @@ int	webserv::Client::_get_path_type()
 	return (__REQUEST_ERROR__);
 }
 
+void	webserv::Client::clear()
+{
+	this->_content_length = 0;
+	this->_full_path.clear();
+	this->_file_name.clear();
+	this->_servers_list.clear();
+	this->_cgi_file.clear();
+	this->_cgi_path_info.clear();
+	this->_cgi_output_file.clear();
+	this->req.clear();
+	this->res.clear();
+}
 /************************ GETTERS/SETTERS ************************/
 void	webserv::Client::set_fd(int fd)
 {
@@ -923,7 +936,7 @@ void	webserv::Client::_set_port(void)
 	this->_port = ntohs(this->_sin.sin_port);
 }
 
-void	webserv::Client::set_config(webserv::Config &config, std::map<std::string, webserv::Store>& servers_list)
+void	webserv::Client::set_config(webserv::Config &config, std::list<std::pair<std::string, webserv::Store> >& servers_list)
 {
 	this->config = config;
 	this->_servers_list = servers_list;

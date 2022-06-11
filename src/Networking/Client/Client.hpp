@@ -60,18 +60,18 @@ class Client
 
 	/************************ MEMBER ATTRIBUTES ************************/
 	private:
-		int										_fd;
-		int										_offset;
-		int										_content_length;
-		std::list<std::string>					_methods;
-		std::string								_full_path;
-		std::string								_file_name;
-		int										_port;
-		struct sockaddr_in						_sin;
-		std::map<std::string, webserv::Store>	_servers_list;
-		std::string								_cgi_file;
-		std::string								_cgi_path_info;
-		std::string								_cgi_output_file;
+		int													_fd;
+		int													_offset;
+		int													_content_length;
+		std::list<std::string>								_methods;
+		std::string											_full_path;
+		std::string											_file_name;
+		int													_port;
+		struct sockaddr_in									_sin;
+		std::list<std::pair<std::string, webserv::Store> >	_servers_list;
+		std::string											_cgi_file;
+		std::string											_cgi_path_info;
+		std::string											_cgi_output_file;
 
 	public:
 		webserv::Request	req;
@@ -122,11 +122,12 @@ class Client
 		char		**prepare_cgi_env();
 		int			execute_cgi(int fd);
 		int			handle_cgi_response();
+		void		clear();
 
 	/************************ GETTERS/SETTERS ************************/
 	public:
 		void			set_fd(int fd);
-		void			set_config(webserv::Config &config, std::map<std::string, webserv::Store> &servers_list);
+		void			set_config(webserv::Config &config, std::list<std::pair<std::string, webserv::Store> > &servers_list);
 		std::string		&get_full_path(void);
 
 	private:

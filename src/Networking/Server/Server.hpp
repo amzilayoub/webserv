@@ -26,12 +26,12 @@ class Server
 {
 	/************************ MEMBER ATTRIBUTES ************************/
 	public:
-		Kqueue									kq;
-		std::map<int, webserv::Client>			clients;
-		webserv::Config							&config;
-		std::map<std::string, webserv::Store>	virt_serv_config;
-		std::list<webserv::Socket>				sockets;
-		std::list<int>							used_ports;
+		Kqueue												kq;
+		std::map<int, webserv::Client>						clients;
+		webserv::Config										&config;
+		std::list<std::pair<std::string, webserv::Store> >	virt_serv_config;
+		std::list<webserv::Socket>							sockets;
+		std::list<int>										used_ports;
 
 
 	/************************ CONSTRUCTORS/DESTRUCTOR ************************/
