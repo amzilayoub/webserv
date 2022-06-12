@@ -147,18 +147,41 @@ void		webserv::Client::match_config()
 	/*
 	** Then filter them by host
 	*/
-	it_header = this->req.get_headers().find("host");
-	if (it_header != this->req.get_headers().end())
-	{
-		it_poss_serv = possible_servers.begin();
-		for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
-		{
-				std::string str;
 
-				str = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
-				if (str.find(it_header->second) == std::string::npos)
-					possible_servers.erase(it_poss_serv--);
-		}
+	it_poss_serv = possible_servers.begin();
+	for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
+	{
+			std::string	hostname;
+			std::string server_name;
+			bool		to_delete;
+
+			to_delete = false;
+			it_header = this->req.get_headers().find("host");
+			if (it_header != this->req.get_headers().end())
+			{
+				hostname = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
+				if (hostname.find(it_header->second) == std::string::npos)
+					to_delete = true;
+				if (it_header != this->req.get_headers().end())
+				{
+					std::list<std::string> *words = webserv::split(it_header->second, ":");
+					server_name = it_poss_serv->server_name;
+					if (webserv::str_to_lower(server_name) == webserv::str_to_lower(words->front()))
+						to_delete = false;
+					delete words;
+				}
+			}
+			it_header = this->req.get_headers().find("server");
+			if (it_header != this->req.get_headers().end() && to_delete)
+			{
+				server_name = it_poss_serv->server_name;
+				if (webserv::str_to_lower(server_name) == webserv::str_to_lower(it_header->second))
+					to_delete = false;
+			}
+			if (to_delete)
+				possible_servers.erase(it_poss_serv--);
+
+
 	}
 
 	/*
