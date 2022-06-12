@@ -220,4 +220,3 @@ std::string	webserv::Response::get_error_file_content(int status_code)
 	}
 	return ("");
 }
-

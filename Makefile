@@ -6,7 +6,7 @@ STD98=-std=c++98
 
 NAME=webserv
 
-SRC = main.cpp 											\
+SRCS = main.cpp 										\
 	./src/Parser/CharacterReader/CharacterReader.cpp	\
 	./src/Parser/Lexer/Lexer.cpp						\
 	./src/Config/Store/Store.cpp						\
@@ -29,17 +29,20 @@ SRC = main.cpp 											\
 	./src/Logger/Logger.cpp								\
 
 
+OBJS=$(SRCS:.cpp=.o)
+
 all: $(NAME)
 
-$(NAME):
-	$(COMPILER) $(FLAGS) $(STD98) $(SRC) -o $(NAME)
+$(NAME): $(OBJS)
+	$(COMPILER) $(FLAGS) $(STD98) $(OBJS) -o $(NAME)
 
 debug:
 	$(COMPILER) $(FLAGS) -g $(STD98) $(SRC) -o $(NAME)
 
 clean:
-	rm -rf $(NAME)
+	rm -rf $(OBJS)
 
 fclean: clean
+	rm -rf $(NAME)
 
 re : fclean all
