@@ -18,14 +18,14 @@
 #  define __REQUEST_DONE__ 0
 #  define __REQUEST_IN_PROGRESS__ 1
 #  define __REQUEST_ERROR__ 2
-#  define __CANNOT_EXECUTE_CGI__ 5
+#  define __CANNOT_EXECUTE_CGI__ 3
 
 #  define __RESPONSE_DONE__ __REQUEST_DONE__
 #  define __RESPONSE_IN_PROGRESS__ __REQUEST_IN_PROGRESS__
-#  define __REMOVE_CLIENT__ 3
+#  define __REMOVE_CLIENT__ 4
 
-#  define __PATH_IS_DIR__ 1
-#  define __PATH_IS_FILE__ 2
+#  define __PATH_IS_DIR__ 5
+#  define __PATH_IS_FILE__ 6
 
 #  define __MB_IN_BYTE__ 1048576
 #  define __BYTE_TO_READ__ 4096

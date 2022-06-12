@@ -55,6 +55,8 @@ int	webserv::Client::handle_request()
 	else if (len > 0)
 	{
 		std::string buffer(buf, len);
+
+		webserv::Logger::debug(buffer);
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -151,18 +153,11 @@ void		webserv::Client::match_config()
 		it_poss_serv = possible_servers.begin();
 		for (; it_poss_serv != possible_servers.end(); it_poss_serv++)
 		{
-
-			// if (it_header->second.find(":") != std::string::npos)
-			// {
 				std::string str;
 
 				str = it_poss_serv->host + ":" + std::to_string(it_poss_serv->port);
 				if (str.find(it_header->second) == std::string::npos)
-				{
 					possible_servers.erase(it_poss_serv--);
-					// it_poss_serv = possible_servers.begin();
-				}
-			// }
 		}
 	}
 
