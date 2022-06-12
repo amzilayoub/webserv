@@ -48,7 +48,6 @@ int	webserv::Client::handle_request()
 
 	len = recv(this->_fd, buf, __BYTE_TO_READ__ - 1, 0);
 	if (len == 0) {
-		webserv::Logger::warning("Client disconnected...");
 		close(this->_fd);
 		return (__REMOVE_CLIENT__);
 	}
@@ -56,7 +55,6 @@ int	webserv::Client::handle_request()
 	{
 		std::string buffer(buf, len);
 
-		webserv::Logger::debug(buffer);
 		if (!this->req.parse(buffer, len))
 		{
 			this->res.error(BAD_REQUEST);
@@ -65,23 +63,17 @@ int	webserv::Client::handle_request()
 	}
 	else if (len < 0)
 	{
-		perror("");
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (__REQUEST_ERROR__);
 	}
 	if (this->req.is_done())
 	{
+		int type;
+
 		this->_url_decode();
 		this->match_config();
-		std::string redirect = this->req.handle_location();
-
-		if (redirect != "")
-		{
-			this->res.set_one_shot(true);
-			this->res.set_header("Location", redirect);
-			this->res.set_status(MOVED_PERMANENTLY);
-			return (__REQUEST_DONE__);
-		}
+		this->req.handle_location();
+	
 		this->_content_length = 0;
 		this->res.set_header("Host", this->req.config.host + ":" + std::to_string(this->req.config.port));
 		this->res.set_header("Server", this->req.config.server_name);
@@ -100,6 +92,15 @@ int	webserv::Client::handle_request()
 			return (__REQUEST_ERROR__);
 		if (!this->check_entity_length())
 			return (__REQUEST_ERROR__);
+		
+		type = this->_get_path_type();
+		if (type == __PATH_IS_DIR__ && this->req.get_header_obj().header_requested_path.back() != '/')
+		{
+			this->res.set_one_shot(true);
+			this->res.set_header("Location", this->req.get_header_obj().header_requested_path + "/");
+			this->res.set_status(MOVED_PERMANENTLY);
+			return (__REQUEST_DONE__);
+		}
 		this->_save_file("/tmp");
 		if (this->check_for_cgi())
 		{
@@ -400,10 +401,11 @@ int		webserv::Client::handle_response()
 
 	action = __RESPONSE_IN_PROGRESS__;
 	buf = this->res.serialize();
-	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) == 0)
+	if ((len = send(this->_fd, buf.c_str(), buf.length(), 0)) == 0 || len < 0)
+	{
 		close(this->_fd);
-	else if (len < 0)
-		webserv::Logger::error("Send function: ");
+		return (__REMOVE_CLIENT__);
+	}
 	if (this->res.is_done())
 	{
 		action = __RESPONSE_DONE__;
@@ -413,7 +415,6 @@ int		webserv::Client::handle_response()
 			if (webserv::str_to_lower(it->second) != "keep-alive")
 			{
 				action = __REMOVE_CLIENT__;
-				webserv::Logger::warning("Client disconnected...");
 				close(this->_fd);
 			}
 		}
@@ -571,7 +572,7 @@ bool	webserv::Client::check_resources_exists()
 
 bool	webserv::Client::check_entity_length()
 {
-	if (static_cast<unsigned int>((this->_content_length / __MB_IN_BYTE__)) > this->req.config.client_max_body_size)
+	if ((double)(((double)this->_content_length / (double)__MB_IN_BYTE__)) > (double)this->req.config.client_max_body_size)
 	{
 		this->res.error(PAYLOAD_TOO_LARGE);
 		return (false);
@@ -589,6 +590,7 @@ bool	webserv::Client::check_supported_media_type()
 	}
 	else if (this->req.config.upload_path.empty())
 	{
+		webserv::Logger::warning("Upload path is not set in your config file");
 		this->res.error(INTERNAL_SERVER_ERROR);
 		return (false);
 	}
@@ -930,14 +932,14 @@ int	webserv::Client::_get_path_type()
 
 	if (lstat(this->_full_path.c_str(), &s) == 0)
 	{
-		/*
-		** if directory
-		*/
 		if (!this->_check_for_read(this->_full_path.c_str()))
 		{
 			this->res.error(FORBIDDEN);
 			return (__REQUEST_ERROR__);
 		}
+		/*
+		** if directory
+		*/
 		else if (S_ISDIR(s.st_mode))
 			return (__PATH_IS_DIR__);
 		/*

@@ -53,7 +53,7 @@ class Request
 	public:
 		bool parse(std::string &str, int len);
 		void clear(void);
-		std::string handle_location(void);
+		void handle_location(void);
 		bool handle_chunked_request(std::string &str, int len);
 		bool is_done(void);
 		int to_int(std::string str);

@@ -51,6 +51,7 @@ void	webserv::Header::_get_headers(std::string &str)
 	this->method = webserv::str_to_lower((*it));
 	this->path = *(++it);
 	this->protocol_version = *(++it);
+	this->header_requested_path = this->path;
 
 	index = this->path.find("?");
 	if (index != std::string::npos)

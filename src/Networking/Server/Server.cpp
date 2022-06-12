@@ -93,16 +93,16 @@ void	webserv::Server::_lunch_worker()
 		else if (this->kq.isEOF(i))
 		{
 			close(fd);
-			webserv::Logger::warning("Client disconnected...");
 			this->clients.erase(fd);
 			continue ;
 		}
 		for (; it != this->sockets.end(); it++)
 		{
 			if (fd == it->getSocket()) {
-				is_socket = true;
 				int clientfd = it->accept_socket();
+				int k;
 
+				is_socket = true;
 				webserv::Logger::info("New connection arrived");
 				this->kq.test_error(clientfd, "Lunch worker");
 				this->kq.create_event(clientfd, EVFILT_READ);
@@ -112,6 +112,9 @@ void	webserv::Server::_lunch_worker()
 					close(clientfd);
 					close(fd);
 				}
+
+				k = 1;
+				setsockopt(clientfd, SOL_SOCKET, SO_KEEPALIVE, &k, sizeof(int));
 				this->clients[clientfd].set_fd(clientfd);
 				this->clients[clientfd].req.set_config(this->config.config.front());
 				this->clients[clientfd].res.set_config(this->config.config.front());

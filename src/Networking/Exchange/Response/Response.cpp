@@ -32,7 +32,7 @@ webserv::Response::Response()
 	this->status_code_list[NO_CONTENT] = "No Content";
 	this->status_code_list[MOVED_PERMANENTLY] = "Moved Permanently";
 
-	this->error_pages[BAD_REQUEST] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Bad Request");
+	this->error_pages[BAD_REQUEST] = std::to_string(BAD_REQUEST) + std::string(" Bad Request");
 	this->error_pages[METHOD_NOT_ALLOWED] = std::to_string(METHOD_NOT_ALLOWED) + std::string(" Method Not Allowed");
 	this->error_pages[METHOD_NOT_IMPLEMENTED] = std::to_string(METHOD_NOT_IMPLEMENTED) + std::string(" Not Implemented");
 	this->error_pages[NOT_FOUND] = std::to_string(NOT_FOUND) + std::string(" Not Found");

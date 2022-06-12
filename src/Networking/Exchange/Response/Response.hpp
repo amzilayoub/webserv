@@ -16,7 +16,7 @@
 #  include <fstream>
 #  include "../../../Config/Store/Store.hpp"
 
-#  define __CHUNK_TO_READ__ 1024
+#  define __CHUNK_TO_READ__ 8192
 namespace webserv
 {
 
