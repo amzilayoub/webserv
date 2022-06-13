@@ -127,6 +127,8 @@ bool webserv::Parser::_listen_token(webserv::Store &store)
 	isValid = this->_exec_regex(token, __REGEX_HOSTNAME__) || this->_exec_regex(token, __REGEX_IP__);
 	if (isValid)
 	{
+		if (!store.host.empty())
+			return (false);
 		store.host = token;
 		token = this->_lexer->nextToken();
 		if (token == ":")
