@@ -1,3 +1,7 @@
+# To setup the project:
+- Create a cgi folder inside the /tmp folder
+- In wordpress, add in the '''wp-config.php''' the following line '''define('CONCATENATE_SCRIPTS', false)''' in order to solve the style issue
+
 Each functions should be documented as follow:
 
 /**
