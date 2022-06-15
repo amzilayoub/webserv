@@ -750,7 +750,7 @@ char	**webserv::Client::prepare_cgi_env()
 		args_list.push_back((std::string("HTTP_COOKIE=")) + it->second);
 
 	args_list.push_back((std::string("SCRIPT_FILENAME=") + this->_cgi_file));
-	args_list.push_back((std::string("HTTP_HOST=127.0.0.1:") + std::to_string(this->req.config.port)));
+	args_list.push_back((std::string("HTTP_HOST=localhost:") + std::to_string(this->req.config.port)) + "/");
 	args_list.push_back((std::string("REDIRECT_STATUS=200")));
 
 	std::list<std::string>::iterator it_l = args_list.begin();
